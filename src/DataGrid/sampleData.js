@@ -5,16 +5,18 @@
  */
 
 /* Column widths are sized so the header (label + sort/filter icon + widest
-   density padding) always fits — headers never truncate; only cell values do. */
+   density padding) always fits — headers never truncate; only cell values do.
+   `priority` drives responsive auto-hiding: 1 never hides; higher numbers
+   drop first as the container narrows (Figma: Tablet → prioritized columns). */
 export const columns = [
-  { key: 'name', label: 'Customer Name', sortable: true, editable: true, width: 158 },
-  { key: 'account', label: 'Account #', sortable: true, width: 128 },
-  { key: 'type', label: 'Account Type', sortable: true, width: 150 },
-  { key: 'status', label: 'Status', badge: true, sortable: false, filter: true, width: 130 },
-  { key: 'balance', label: 'Balance', numeric: true, sortable: true, currencyFrom: 'currency', editable: true, width: 130 },
-  { key: 'currency', label: 'Currency', sortable: false, width: 102 },
-  { key: 'lastActivity', label: 'Last Activity', sortable: true, width: 142 },
-  { key: 'country', label: 'Country', sortable: false, filter: true, width: 126 }
+  { key: 'name', label: 'Customer Name', sortable: true, editable: true, width: 158, priority: 1 },
+  { key: 'account', label: 'Account #', sortable: true, width: 128, priority: 4 },
+  { key: 'type', label: 'Account Type', sortable: true, width: 150, priority: 5 },
+  { key: 'status', label: 'Status', badge: true, sortable: false, filter: true, width: 130, priority: 3 },
+  { key: 'balance', label: 'Balance', numeric: true, sortable: true, currencyFrom: 'currency', editable: true, width: 130, priority: 2 },
+  { key: 'currency', label: 'Currency', sortable: false, width: 102, priority: 8 },
+  { key: 'lastActivity', label: 'Last Activity', sortable: true, width: 142, priority: 6 },
+  { key: 'country', label: 'Country', sortable: false, filter: true, width: 126, priority: 7 }
 ];
 
 export const statusVariant = {

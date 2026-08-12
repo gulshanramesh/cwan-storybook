@@ -4,6 +4,15 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Accessibility Checklist
 
+> **Audit record (Aug 12, 2026):** axe-core run against nine story states
+> (Standard, Without Selection, Filters Applied, Sticky Columns, Tablet,
+> Mobile, Loading, Empty, Error) plus both open-menu states — **zero
+> violations**. The audit itself surfaced and fixed two issues: the mobile
+> Filters button lost its accessible name when its label was visually hidden
+> (now `aria-label`), and the mobile breakpoint had swallowed the
+> sticky-column range (now 480px). The a11y addon re-runs these checks live
+> on every story.
+
 How the DataGrid meets each requirement, and which design token or component
 behavior implements it. Automated checks (contrast, roles, labels) run in the
 **Accessibility panel** on every story via `@storybook/addon-a11y`.
@@ -37,6 +46,8 @@ behavior implements it. Automated checks (contrast, roles, labels) run in the
 - **Enter** on a focused row opens its first editable cell; while editing,
   **Enter** commits and **Escape** cancels. Invalid numeric input sets
   `aria-invalid` and the Error cell state (Border-Error + Background-Error).
+- Column resize is **pointer-only** in this demo; keyboard resize
+  (e.g. Alt+Arrow on the header) is a documented production follow-up.
 - Documented follow-up for production: full cell-by-cell roving tabindex
   (Arrow Left/Right within a row) per the ARIA grid pattern — row-level
   navigation ships in this prototype.

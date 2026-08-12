@@ -84,7 +84,38 @@ export function DataGrid({
   const [editing, setEditing] = useState(null); // { rowId, key, value, error }
   const [columnFilters, setColumnFilters] = useState({}); // colKey -> [values]
   const [filterMenu, setFilterMenu] = useState(null); // { colKey, x, y }
+  const [toolbarMenu, setToolbarMenu] = useState(null); // { kind: 'filters'|'saved', x, y }
+  const [colWidths, setColWidths] = useState({}); // colKey -> resized px
+  const [containerW, setContainerW] = useState(0);
+  const [viewLabel, setViewLabel] = useState(savedView);
   const rowRefs = useRef([]);
+  const rootRef = useRef(null);
+
+  useEffect(() => setViewLabel(savedView), [savedView]);
+
+  // Container width drives responsive behavior (column auto-hiding, card view).
+  // Measured after every render (guarded set — converges immediately), with
+  // ResizeObserver/window-resize keeping it live between renders.
+  const measureContainer = () => {
+    const el = rootRef.current;
+    if (!el) return;
+    const w = Math.round(el.getBoundingClientRect().width);
+    setContainerW((prev) => (prev === w ? prev : w));
+  };
+  useEffect(() => {
+    measureContainer();
+  });
+  useEffect(() => {
+    window.addEventListener('resize', measureContainer);
+    const ro =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measureContainer) : null;
+    if (ro && rootRef.current) ro.observe(rootRef.current);
+    return () => {
+      window.removeEventListener('resize', measureContainer);
+      ro?.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keep internal state in sync when the prop changes. The functional updates
   // bail out on shallow-equal values, so even unstable array references from
@@ -106,7 +137,50 @@ export function DataGrid({
 
   // Column order follows the Customize Columns drag order
   const orderedColumns = order.map((k) => columns.find((c) => c.key === k)).filter(Boolean);
-  const visibleColumns = orderedColumns.filter((c) => !hidden.has(c.key));
+  const userVisible = orderedColumns.filter((c) => !hidden.has(c.key));
+
+  const effWidth = (c) => colWidths[c.key] ?? c.width ?? 120;
+
+  // Mobile card layout below 480px (Figma: Mobile / Cards at 390). Between
+  // 480 and the core-column width the table scrolls with pinned edges.
+  const mobile = containerW > 0 && containerW < 480;
+
+  // Responsive auto-hiding: drop lowest-priority columns until the rest fit
+  // (Figma: Tablet → prioritized columns). Manual hiding still applies first.
+  const autoHidden = useMemo(() => {
+    if (mobile || containerW === 0) return new Set();
+    const chrome = (selectable ? 40 : 0) + 44 + 2;
+    const dropped = new Set();
+    let total = userVisible.reduce((s, c) => s + effWidth(c), 0);
+    const droppable = [...userVisible].sort((a, b) => (b.priority ?? 1) - (a.priority ?? 1));
+    for (const c of droppable) {
+      if (total + chrome <= containerW) break;
+      if ((c.priority ?? 1) <= 4) continue; // core columns never auto-hide — below this width the grid scrolls with pinned edges instead
+      dropped.add(c.key);
+      total -= effWidth(c);
+    }
+    return dropped;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [containerW, mobile, selectable, userVisible.map((c) => c.key).join(), colWidths]);
+
+  const visibleColumns = userVisible.filter((c) => !autoHidden.has(c.key));
+
+  // ── Column resizing (pointer drag on the header edge) ──
+  const startResize = (e, col) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startW = effWidth(col);
+    const min = Math.min(startW, Math.max(64, (col.width ?? 120) - 40));
+    const onMove = (ev) =>
+      setColWidths((w) => ({ ...w, [col.key]: Math.max(min, startW + ev.clientX - startX) }));
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
 
   const reorderColumn = (fromKey, toKey) => {
     if (!fromKey || !toKey || fromKey === toKey) return;
@@ -151,6 +225,30 @@ export function DataGrid({
     const col = columns.find((c) => c.key === key);
     return values.map((value) => ({ colKey: key, value, label: `${col?.label}: ${value}` }));
   });
+
+  // ── Saved views (Figma: Toolbar → Saved View select) ──
+  const SAVED_VIEWS = [
+    { label: 'All accounts' },
+    { label: 'Active accounts', filters: { status: ['Active'] } },
+    { label: 'High balances first', sort: { key: 'balance', dir: 'desc' } },
+    { label: 'United States', filters: { country: ['United States'] } }
+  ];
+
+  const applySavedView = (view) => {
+    setColumnFilters(view.filters ?? {});
+    setSort(view.sort ?? null);
+    setViewLabel(view.label);
+    setPage(0);
+    setToolbarMenu(null);
+  };
+
+  // Card layout anatomy (Figma: Customer Account Card)
+  const titleCol = orderedColumns.find((c) => (c.priority ?? 9) === 1) ?? orderedColumns[0];
+  const badgeCol = orderedColumns.find((c) => c.badge);
+  const cardCols = orderedColumns
+    .filter((c) => c !== titleCol && c !== badgeCol)
+    .sort((a, b) => (a.priority ?? 9) - (b.priority ?? 9))
+    .slice(0, 3);
 
   const sorted = useMemo(() => {
     if (!sort) return filtered;
@@ -283,8 +381,10 @@ export function DataGrid({
 
   return (
     <div
+      ref={rootRef}
       className="dg"
       data-density={densityState}
+      data-mobile={mobile}
       data-selectable={selectable}
       data-scrolled-x={scrolled.x}
       data-scrolled-x-end={scrolled.xEnd}
@@ -325,15 +425,102 @@ export function DataGrid({
         </p>
         <div className="dg-toolbar-spacer" />
 
-        <button type="button" className="dg-btn dg-select" aria-haspopup="listbox">
-          {savedView}
+        <button
+          type="button"
+          className="dg-btn dg-select"
+          aria-haspopup="true"
+          aria-expanded={toolbarMenu?.kind === 'saved'}
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setToolbarMenu((m) =>
+              m?.kind === 'saved'
+                ? null
+                : { kind: 'saved', x: r.left + window.scrollX, y: r.bottom + window.scrollY + 6 }
+            );
+          }}
+        >
+          {viewLabel}
           <Icon name="arrowDropDown" size={16} />
         </button>
 
-        <button type="button" className="dg-btn">
+        <button
+          type="button"
+          className="dg-btn"
+          aria-label="Filters"
+          aria-haspopup="true"
+          aria-expanded={toolbarMenu?.kind === 'filters'}
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setToolbarMenu((m) =>
+              m?.kind === 'filters'
+                ? null
+                : { kind: 'filters', x: r.left + window.scrollX, y: r.bottom + window.scrollY + 6 }
+            );
+          }}
+        >
           <Icon name="filterList" size={16} />
-          Filters
+          <span className="dg-btn-label">Filters</span>
         </button>
+
+        {/* Toolbar dropdowns — portaled like the column filter menu */}
+        {toolbarMenu &&
+          createPortal(
+            <>
+              <div className="dg-filterbackdrop" onClick={() => setToolbarMenu(null)} />
+              <div
+                className="dg-filtermenu"
+                role="group"
+                aria-label={toolbarMenu.kind === 'saved' ? 'Saved views' : 'Filters'}
+                style={{ left: toolbarMenu.x, top: toolbarMenu.y }}
+              >
+                {toolbarMenu.kind === 'saved' ? (
+                  <>
+                    <p className="dg-colmenu-title">Saved Views</p>
+                    {SAVED_VIEWS.map((view) => (
+                      <button
+                        key={view.label}
+                        type="button"
+                        className="dg-menuitem"
+                        onClick={() => applySavedView(view)}
+                      >
+                        <Icon
+                          name="check"
+                          size={14}
+                          className={viewLabel === view.label ? '' : 'dg-invisible'}
+                        />
+                        {view.label}
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <p className="dg-colmenu-title">Filters</p>
+                    {columns
+                      .filter((c) => c.filter)
+                      .map((col) => (
+                        <div key={col.key}>
+                          <p className="dg-menusection">{col.label}</p>
+                          {[...new Set(data.map((r) => String(r[col.key])))].sort().map((value) => (
+                            <label key={value}>
+                              <input
+                                type="checkbox"
+                                checked={(columnFilters[col.key] ?? []).includes(value)}
+                                onChange={() => {
+                                  toggleColumnFilter(col.key, value);
+                                  setToolbarMenu(null);
+                                }}
+                              />
+                              {value}
+                            </label>
+                          ))}
+                        </div>
+                      ))}
+                  </>
+                )}
+              </div>
+            </>,
+            document.body
+          )}
 
         {/* Density segmented toggle (Figma: Density component / variable modes) */}
         <div className="dg-segmented" role="group" aria-label="Row density">
@@ -530,6 +717,86 @@ export function DataGrid({
         </div>
       )}
 
+      {/* ── Mobile card layout (Figma: Mobile / Cards) ── */}
+      {mobile ? (
+        <div className="dg-cards">
+          {loading &&
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={`skeleton-${i}`} className="dg-card">
+                <span className="dg-skeleton" style={{ width: '55%' }} />
+                <span className="dg-skeleton" style={{ width: '80%' }} />
+                <span className="dg-skeleton" style={{ width: '65%' }} />
+              </div>
+            ))}
+          {!loading && rows.length === 0 && (
+            <div className="dg-cards-empty">
+              {query ? `No accounts match “${query}”.` : 'No accounts to display.'}
+            </div>
+          )}
+          {!loading &&
+            rows.map((row) => (
+              <div
+                key={row.id}
+                className={[
+                  'dg-card',
+                  selected.has(row.id) ? 'selected' : '',
+                  row.error ? 'row-error' : ''
+                ]
+                  .join(' ')
+                  .trim()}
+              >
+                <div className="dg-card-head">
+                  {selectable && (
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${row[titleCol.key]}`}
+                      checked={selected.has(row.id)}
+                      onChange={() => toggleRow(row.id)}
+                    />
+                  )}
+                  <span className="dg-card-title">{row[titleCol.key]}</span>
+                  {badgeCol && (
+                    <span className={`dg-badge ${statusVariant[row[badgeCol.key]] ?? 'neutral'}`}>
+                      {row[badgeCol.key]}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="dg-iconbtn"
+                    aria-label={`Actions for ${row[titleCol.key]}`}
+                  >
+                    <Icon name="moreVert" size={16} />
+                  </button>
+                </div>
+                {cardCols.map((col) => {
+                  const v = row[col.key];
+                  return (
+                    <div key={col.key} className="dg-card-row">
+                      <span className="dg-card-label">{col.label}</span>
+                      <span
+                        className={[
+                          'dg-card-value',
+                          col.numeric ? 'numeric' : '',
+                          col.numeric && v != null && v < 0 ? 'negative' : ''
+                        ]
+                          .join(' ')
+                          .trim()}
+                      >
+                        {col.numeric
+                          ? v == null
+                            ? '–'
+                            : col.currencyFrom
+                              ? fmtCurrency(v, row[col.currencyFrom])
+                              : fmtNumber(v)
+                          : v}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+        </div>
+      ) : (
       <div className="dg-scroll" ref={scrollRef} onScroll={onScroll}>
         {/* min-width = sum of column widths, so narrow containers scroll
             horizontally instead of crushing columns into truncated headers */}
@@ -538,14 +805,14 @@ export function DataGrid({
             minWidth:
               (selectable ? 40 : 0) +
               44 +
-              visibleColumns.reduce((sum, c) => sum + (c.width ?? 120), 0)
+              visibleColumns.reduce((sum, c) => sum + effWidth(c), 0)
           }}
         >
           {/* Fixed layout: column widths stay stable across sorting, filtering, and paging */}
           <colgroup>
             {selectable && <col style={{ width: 40 }} />}
             {visibleColumns.map((c) => (
-              <col key={c.key} style={c.width ? { width: c.width } : undefined} />
+              <col key={c.key} style={{ width: effWidth(c) }} />
             ))}
             <col style={{ width: 44 }} />
           </colgroup>
@@ -603,6 +870,13 @@ export function DataGrid({
                   ) : (
                     c.label
                   )}
+                  {/* pointer-drag resize handle on the column's right edge */}
+                  <span
+                    className="dg-resize"
+                    aria-hidden="true"
+                    onPointerDown={(e) => startResize(e, c)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 </th>
               ))}
               <th className="actions" scope="col">
@@ -742,6 +1016,7 @@ export function DataGrid({
           </tbody>
         </table>
       </div>
+      )}
 
       {/* ── Footer (Figma: Table Footer → Type=Pagination) ── */}
       {pagination && !loading && sorted.length > 0 && (

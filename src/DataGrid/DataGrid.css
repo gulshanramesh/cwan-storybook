@@ -378,6 +378,7 @@
   z-index: 40;
 }
 
+/* One shared panel treatment across all dropdowns (matches .dg-colmenu) */
 .dg-filtermenu {
   position: absolute; /* document-anchored via portal — scrolls with the page */
   z-index: 50;
@@ -387,8 +388,8 @@
   border: 1px solid var(--grid-border);
   border-radius: 8px;
   box-shadow: var(--elevation-menu);
-  padding: 6px 0 4px;
-  min-width: 180px;
+  padding: 6px 0 8px;
+  min-width: 220px;
 }
 
 .dg-filtermenu label {
@@ -411,6 +412,142 @@
   height: 16px;
   accent-color: var(--color-primary);
 }
+
+/* Toolbar dropdown items (Saved Views) and filter section labels */
+.dg-menuitem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font: 500 var(--type-header-size) / var(--type-header-lh) var(--font-family);
+  color: var(--color-on-surface);
+  background: none;
+  border: none;
+  padding: 6px 14px; /* matches .dg-colmenu label rows */
+  cursor: pointer;
+  text-align: left;
+}
+
+.dg-menuitem:hover { background: var(--grid-row-hover); }
+
+.dg-menusection {
+  font: 500 10px / 14px var(--font-family);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  margin: 6px 0 0;
+  padding: 4px 14px 2px;
+}
+
+.dg-invisible { visibility: hidden; }
+
+/* ── Column resize handle (pointer drag on the header edge) ── */
+.dg-resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 7px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.dg-resize:hover { box-shadow: inset -2px 0 0 var(--grid-border-active); }
+
+/* ── Mobile card layout (Figma: Mobile / Cards) ── */
+.dg[data-mobile='true'] .dg-segmented,
+.dg[data-mobile='true'] button[aria-label='Download'],
+.dg[data-mobile='true'] button[aria-label='Columns'] {
+  display: none; /* table-specific controls have no card equivalent */
+}
+
+/* Mobile toolbar (Figma mobile screens): full-width search + square funnel
+   icon button; no Saved View dropdown, no button label */
+.dg[data-mobile='true'] .dg-toolbar {
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.dg[data-mobile='true'] .dg-searchwrap {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.dg[data-mobile='true'] .dg-toolbar-spacer,
+.dg[data-mobile='true'] .dg-select {
+  display: none;
+}
+
+.dg[data-mobile='true'] .dg-btn-label { display: none; }
+
+.dg[data-mobile='true'] .dg-btn {
+  width: 38px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+  flex: none;
+}
+
+.dg-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--color-surface-low);
+}
+
+.dg-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--grid-row-default);
+  border: 1px solid var(--grid-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.dg-card.selected { background: var(--grid-row-selected); }
+.dg-card.row-error { background: var(--grid-row-error); }
+
+.dg-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dg-card-title {
+  flex: 1;
+  font: 500 var(--type-label-lg-size) / var(--type-label-lg-lh) var(--font-family);
+  letter-spacing: var(--type-label-lg-track);
+  color: var(--color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dg-card-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font: 400 var(--type-cell-size) / var(--type-cell-lh) var(--font-family);
+  letter-spacing: var(--type-cell-track);
+}
+
+.dg-card-label { color: var(--color-on-surface-variant); }
+
+.dg-card-value { color: var(--color-on-surface); }
+.dg-card-value.numeric { font-variant-numeric: tabular-nums lining-nums; }
+.dg-card-value.negative { color: var(--grid-value-negative); font-weight: 500; }
+
+.dg-cards-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--color-on-surface-variant);
+  font: 400 var(--type-input-size) / var(--type-input-lh) var(--font-family);
+}
+
+.dg-cards .dg-skeleton { width: 100%; }
 
 .dg td {
   font: 400 var(--type-cell-size) / var(--type-cell-lh) var(--font-family);

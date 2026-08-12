@@ -33,7 +33,8 @@ export default {
     },
     savedView: {
       control: 'text',
-      description: 'Figma: Toolbar → Saved View select.',
+      description:
+        'Figma: Toolbar → Saved View select. Interactive: opens a preset-view menu (filters/sort combinations); the Filters button opens grouped per-column value filters.',
       table: { category: 'Figma properties' }
     },
     density: {
@@ -71,7 +72,7 @@ export default {
     columns: {
       control: 'object',
       description:
-        'Column definitions: key, label, numeric, badge, sortable, filter, editable, currencyFrom. Editable columns map to Figma Row Cell → State=Editing | Error; filter maps to Header Cell → Filter.',
+        'Column definitions: key, label, numeric, badge, sortable, filter, editable, currencyFrom, width, priority. Editable maps to Figma Row Cell → State=Editing | Error; filter maps to Header Cell → Filter; priority drives responsive auto-hiding. All columns are pointer-resizable via the header edge.',
       table: { category: 'Data' }
     },
     data: {
@@ -115,6 +116,36 @@ export const PinnedFirstColumn = {
   parameters: { layout: 'padded' },
   render: (args) => (
     <div style={{ maxWidth: 560 }}>
+      <DataGrid {...args} />
+    </div>
+  )
+};
+
+/**
+ * Tablet width (Figma: Tablet / Prioritized columns): low-priority columns
+ * auto-hide by column `priority` until the rest fit; core columns
+ * (name, balance, status, account) never auto-hide.
+ */
+export const TabletView = {
+  name: 'Tablet (768)',
+  parameters: { layout: 'padded' },
+  render: (args) => (
+    <div style={{ maxWidth: 768 }}>
+      <DataGrid {...args} />
+    </div>
+  )
+};
+
+/**
+ * Mobile width (Figma: Mobile / Cards): below 640px the grid renders as a
+ * card list — title + status badge + key fields — with search, filters,
+ * selection, and pagination intact.
+ */
+export const MobileView = {
+  name: 'Mobile (390)',
+  parameters: { layout: 'padded' },
+  render: (args) => (
+    <div style={{ maxWidth: 390 }}>
       <DataGrid {...args} />
     </div>
   )
