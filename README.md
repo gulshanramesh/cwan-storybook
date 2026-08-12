@@ -8,11 +8,13 @@ design tokens mirror the Figma `Accounting` / `Data Grid` variable collections
 ## View without installing anything
 
 The `storybook-static/` folder is a prebuilt Storybook. Serve it with any static
-server, e.g.:
+server — on macOS the preinstalled Python works, no other tools needed:
 
 ```
-npx http-server storybook-static
+python3 -m http.server 8080 --directory storybook-static
 ```
+
+then open http://localhost:8080 in a browser. (Node users: `npx http-server storybook-static` works too.)
 
 ## Run the live dev version
 
