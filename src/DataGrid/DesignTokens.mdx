@@ -1,0 +1,64 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { GridTokens, BadgeTokens, SystemTokens, ElevationTokens, TypeTokens, DensityTokens } from './TokenSheet.jsx';
+
+<Meta title="Data Grid/Design Tokens" />
+
+# Design Tokens
+
+The pipeline: **Figma variables → CSS custom properties → component styles.**
+Every token in the Figma file's `Accounting` and `Data Grid / Semantic` collections
+is mirrored in [`tokens.css`](?path=/docs/data-grid-datagrid--docs) with its Figma
+name preserved as a comment, and the grid consumes only these properties — never
+raw values.
+
+**Every value on this page is read live from the running CSS** at render time
+(`getComputedStyle`), not hand-typed — so this page cannot drift from the code.
+The Figma file's *Spec and M3 Audit* page remains the canonical token
+documentation (alias chains, M3 mappings, audit notes); this page proves the
+tokens are wired into working code.
+
+## Grid semantic tokens
+
+Component-level tokens (`grid/*` in Figma). Each aliases a system token — never
+a raw hex — so theming stays a one-collection change.
+
+<GridTokens />
+
+## Status badge pairs
+
+Container + text pairs per semantic state, rendered here with the actual tokens.
+
+<BadgeTokens />
+
+## System palette (sys tokens)
+
+The `Schemes/*` tokens the grid consumes, from the Accounting collection
+(Light mode). The Figma matrix additionally documents a few scheme tokens the
+grid does not consume directly as CSS (`Schemes/Outline`, `Schemes/Secondary`,
+`Schemes/Surface Dim`) — those appear inside Figma component internals only,
+so they have no custom property here by design.
+
+<SystemTokens />
+
+## Elevation
+
+Shadows are earned, never decorative: the grid rests flat with borders doing
+the separating. Live boxes below cast the actual token shadows.
+
+<ElevationTokens />
+
+## Typography
+
+The Accounting ramp adopts the M3 type scale verbatim; these are the five roles
+the grid uses. Numeric samples demonstrate tabular lining figures — digits align
+vertically at every size.
+
+<TypeTokens />
+
+## Density
+
+One grid component, three variable modes (Figma: the `Data Grid / Density`
+collection). The columns below are read from three live probes, one per mode —
+the same mechanism the `density` prop switches at runtime.
+
+<DensityTokens />

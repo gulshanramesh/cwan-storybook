@@ -1,0 +1,75 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Data Grid/Accessibility" />
+
+# Accessibility Checklist
+
+How the DataGrid meets each requirement, and which design token or component
+behavior implements it. Automated checks (contrast, roles, labels) run in the
+**Accessibility panel** on every story via `@storybook/addon-a11y`.
+
+## 1. Table / grid semantics
+
+- Rendered as a native `<table>` with `<thead>`, `<th scope="col">`, and `<tbody>` —
+  native semantics are preferred over `role="grid"` because this grid reads more
+  than it edits (ARIA authoring guidance: use `grid` only for composite-widget
+  editing surfaces).
+- Status badges are text, not color alone — each state is named ("Active",
+  "Suspended"), with the colored dot as a secondary cue.
+
+## 2. Sort state and result counts announced
+
+- Sortable headers set **`aria-sort`** (`ascending` / `descending` / `none`) on the
+  `<th>`, so screen readers announce the active sort. Verified by the
+  **SortToggling** interaction test.
+- The result count ("5 of 12 accounts") is a **`role="status"` live region** that
+  re-announces whenever search filters the rows. Verified by the
+  **SearchFiltering** interaction test.
+- Row-level errors are conveyed by the Error cell/row treatment plus
+  `aria-invalid` on any offending editor input — not by color alone.
+
+## 3. Keyboard navigation
+
+- Every interactive element (search, sort buttons, column menu, checkboxes,
+  pagination) is a native focusable control — full Tab order for free.
+- Rows are focusable; **Arrow Up/Down** move between rows, **Home/End** jump to
+  first/last, and **Space** toggles selection when the grid is selectable.
+- **Enter** on a focused row opens its first editable cell; while editing,
+  **Enter** commits and **Escape** cancels. Invalid numeric input sets
+  `aria-invalid` and the Error cell state (Border-Error + Background-Error).
+- Documented follow-up for production: full cell-by-cell roving tabindex
+  (Arrow Left/Right within a row) per the ARIA grid pattern — row-level
+  navigation ships in this prototype.
+
+## 4. Color contrast
+
+Token pairs used by text, checked against WCAG AA (4.5:1 for the sizes used):
+
+| Pair | Tokens | Ratio |
+| --- | --- | --- |
+| Cell text on row | On Surface `#1b1b25` on `#ffffff` / zebra `#f5f2ff` | ≈ 17:1 ✓ |
+| Negative value | Color/Value/Negative `#ba1a1a` on `#ffffff` | ≈ 6.5:1 ✓ |
+| Negative on error row | `#ba1a1a` on Row/Error `#ffdad6` | ≈ 5.0:1 ✓ |
+| Selected row text | On Secondary Container `#201634` on `#ebddff` | ≈ 13:1 ✓ |
+| Badge text | e.g. `#1c5128` on `#b7f1ba` | ≥ 7:1 ✓ |
+
+The a11y addon re-runs these checks live — change a token and the panel
+flags any regression.
+
+## 5. Visible focus indicators
+
+- All buttons and inputs show a **2px outline in Color/Cell/Border-Active**
+  (`#5a5892`) via `:focus-visible`.
+- Focused rows show the same 2px inset outline, so keyboard position is always
+  visible against default, zebra, hover, and selected row fills.
+
+## Interactions under test
+
+| Interaction | Story | What it asserts |
+| --- | --- | --- |
+| Search filters rows | **SearchFiltering** | Row set shrinks; live region announces "5 of 12 accounts" |
+| Header click toggles sort | **SortToggling** | `aria-sort` cycles ascending → descending |
+| Column visibility | **ColumnVisibility** | Unchecking a column removes it from the table |
+| Column filtering | **ColumnFiltering** | Funnel opens a value menu; checking filters rows, adds a removable chip, updates the live count |
+| Inline editing | **InlineEditing** | Double-click opens editor; Enter commits; invalid numbers set `aria-invalid` + Error state; Escape cancels |
+| Row selection (mouse + keyboard) | **Standard** (manual) | Checkbox click and Space both toggle; Arrow keys move row focus |

@@ -1,0 +1,22 @@
+{
+  "name": "cwan-datagrid-storybook",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^9.1.1",
+    "@storybook/addon-docs": "^9.1.1",
+    "@storybook/react-vite": "^9.1.1",
+    "@vitejs/plugin-react": "^4.5.0",
+    "storybook": "^9.1.1",
+    "vite": "^6.3.5"
+  }
+}

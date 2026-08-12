@@ -1,0 +1,89 @@
+/*
+ * Design tokens — mirrored 1:1 from the CWAN-Exercise Figma file.
+ * Source of truth: "Accounting" variable collection (Light mode)
+ * and the "Data Grid / Semantic" + "Data Grid / Density" collections.
+ */
+
+:root {
+  /* ── Accounting / Schemes (sys tokens) ─────────────────────── */
+  --color-primary: #5a5892;            /* Schemes/Primary */
+  --color-on-primary: #ffffff;         /* Schemes/On Primary */
+  --color-on-surface: #1b1b25;         /* Schemes/On Surface */
+  --color-on-surface-variant: #464554; /* Schemes/On Surface Variant */
+  --color-outline-variant: #c7c4d6;    /* Schemes/Outline Variant */
+  --color-surface-lowest: #ffffff;     /* Schemes/Surface Container Lowest */
+  --color-surface-low: #f5f2ff;        /* Schemes/Surface Container Low */
+  --color-surface-container: #f0ecfb;  /* Schemes/Surface Container */
+  --color-secondary-container: #ebddff;    /* Schemes/Secondary Container */
+  --color-on-secondary-container: #201634; /* Schemes/On Secondary Container */
+  --color-on-primary-fixed-variant: #2d00e5; /* Schemes/On Primary Fixed Variant — search active border */
+  --color-link: #2d00e5;               /* Color/Text/Link — bulk action links */
+  --grid-chips-bg: #e4e0f2;            /* Color/Chips/Background → Schemes/Surface Variant */
+  --color-surface-bright: #fcf8ff;     /* Schemes/Surface Bright — Color/Bulk/Bulk Action Container */
+  --color-error: #ba1a1a;              /* Schemes/Error */
+  --color-error-container: #ffdad6;    /* Schemes/Error Container */
+  --color-on-error-container: #73332e; /* Extended/On Error Container */
+  --color-success: #35693e;            /* Extended Colors/Success */
+
+  /* ── Data Grid / Semantic (comp tokens — alias sys) ─────────── */
+  --grid-row-default: var(--color-surface-lowest);   /* Color/Row/Default */
+  --grid-row-zebra: var(--color-surface-low);        /* Color/Row/Zebra */
+  --grid-row-hover: var(--color-surface-container);  /* Color/Row/Hover */
+  --grid-row-selected: var(--color-secondary-container); /* Color/Row/Selected */
+  --grid-row-error: var(--color-error-container);    /* Color/Row/Error */
+  --grid-value-negative: var(--color-error);         /* Color/Value/Negative */
+  --grid-value-positive: var(--color-success);       /* Color/Value/Positive */
+  --grid-border: var(--color-outline-variant);       /* Color/Cell/Border-Default */
+  --grid-border-active: var(--color-primary);        /* Color/Cell/Border-Active (focus) */
+
+  /* ── Status badge pairs ─────────────────────────────────────── */
+  --badge-success-bg: #b7f1ba;  --badge-success-text: #1c5128;
+  --badge-warning-bg: #ffdcc3;  --badge-warning-text: #6c3a07;
+  --badge-error-bg: #ffdad6;    --badge-error-text: #73332e;
+  --badge-neutral-bg: #f1f2f4;  --badge-neutral-text: #1d4875;
+  --badge-info-bg: #cce5ff;     --badge-info-text: #074b72;
+
+  /* ── Data Grid / Elevation (effect styles) ──────────────────── */
+  --elevation-sticky-header: 0 2px 4px rgba(0, 0, 0, 0.25); /* Elevation/Sticky Header */
+  --elevation-frozen-column: 2px 0 4px rgba(0, 0, 0, 0.25); /* Elevation/Frozen Column */
+  --elevation-menu: 0 4px 4px rgba(0, 0, 0, 0.15);          /* Elevation/Menu */
+
+  /* ── Typography (Accounting ramp, M3 verbatim) ──────────────── */
+  --font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  /* body/small — data cells */
+  --type-cell-size: 12px;    --type-cell-lh: 16px;   --type-cell-track: 0.4px;
+  /* label/medium — column headers */
+  --type-header-size: 12px;  --type-header-lh: 16px; --type-header-track: 0.5px;
+  /* label/large — buttons, bulk actions, pagination */
+  --type-label-lg-size: 14px; --type-label-lg-lh: 20px; --type-label-lg-track: 0.1px;
+  /* label/small — badges */
+  --type-badge-size: 11px;   --type-badge-lh: 16px;  --type-badge-track: 0.5px;
+  /* body/medium — inputs */
+  --type-input-size: 14px;   --type-input-lh: 20px;  --type-input-track: 0.25px;
+}
+
+/*
+ * Data Grid / Density — variable collection with three modes.
+ * In Figma these are modes on the collection; here the [data-density]
+ * attribute plays the role of the mode switch.
+ */
+.dg[data-density='compact'] {
+  --dg-row-h: 32px;    /* density/row-height */
+  --dg-header-h: 36px; /* density/header-height */
+  --dg-pad-x: 12px;    /* density/cell-padding-x */
+  --dg-pad-y: 8px;     /* density/cell-padding-y */
+}
+
+.dg[data-density='standard'] {
+  --dg-row-h: 40px;
+  --dg-header-h: 44px;
+  --dg-pad-x: 16px;
+  --dg-pad-y: 12px;
+}
+
+.dg[data-density='comfortable'] {
+  --dg-row-h: 48px;
+  --dg-header-h: 48px;
+  --dg-pad-x: 20px;
+  --dg-pad-y: 16px;
+}

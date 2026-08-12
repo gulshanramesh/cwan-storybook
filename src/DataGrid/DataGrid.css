@@ -1,0 +1,618 @@
+/* DataGrid component styles — every color/size resolves to a token in tokens.css */
+
+.dg {
+  font-family: var(--font-family);
+  color: var(--color-on-surface);
+  background: var(--grid-row-default);
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 1160px;
+}
+
+.dg-icon { display: inline-block; vertical-align: middle; flex: none; }
+
+/* Visually hidden (screen-reader-only) text */
+.dg-vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────── */
+.dg-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--grid-border);
+  position: relative;
+}
+
+.dg-searchwrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 240px; /* fixed — the clear button appears inside without resizing the box */
+  background: var(--grid-row-default);
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 36px;
+  color: var(--color-on-surface); /* Figma: search icon → Schemes/On Surface */
+}
+
+/* Figma Search → Type=Active: the border itself recolors — no extra ring */
+.dg-searchwrap:focus-within {
+  border-color: var(--color-on-primary-fixed-variant);
+}
+
+/* Hide the browser's native search-cancel ✕ — the component renders its own */
+.dg-search::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dg-iconbtn.dg-searchclear {
+  width: 20px;
+  height: 20px;
+  color: var(--color-on-surface); /* Figma: close icon → Schemes/On Surface */
+}
+
+.dg-search {
+  font: 400 var(--type-input-size) / var(--type-input-lh) var(--font-family);
+  letter-spacing: var(--type-input-track);
+  color: var(--color-on-surface);
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Figma Search: placeholder is Color/Text/Default at 50% — constant across
+   hover; it only clears on focus */
+.dg-search::placeholder {
+  color: var(--color-on-surface);
+  opacity: 0.5;
+}
+
+/* Placeholder clears as soon as the field is focused */
+.dg-search:focus::placeholder { opacity: 0; }
+
+.dg-status {
+  font: 400 var(--type-cell-size) / var(--type-cell-lh) var(--font-family);
+  color: var(--color-on-surface-variant);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.dg-toolbar-spacer { flex: 1; }
+
+.dg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* Figma: Toolbar buttons use Accounting/body/medium (14 Regular), Color/Text/Default */
+  font: 400 var(--type-input-size) / var(--type-input-lh) var(--font-family);
+  letter-spacing: var(--type-input-track);
+  color: var(--color-on-surface);
+  background: var(--grid-row-default);
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  height: 36px;
+  padding: 0 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dg-btn:hover { background: var(--grid-row-hover); }
+
+.dg-select { color: var(--color-on-surface); }
+
+.dg-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--color-on-surface-variant);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.dg-iconbtn:hover { background: var(--grid-row-hover); color: var(--color-on-surface); }
+
+/* Density segmented toggle — selected segment uses Secondary Container */
+.dg-segmented {
+  display: inline-flex;
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dg-segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 34px;
+  color: var(--color-on-surface-variant);
+  background: var(--grid-row-default);
+  border: none;
+  border-right: 1px solid var(--grid-border);
+  cursor: pointer;
+}
+
+.dg-segmented button:last-child { border-right: none; }
+.dg-segmented button:hover { background: var(--grid-row-hover); }
+
+.dg-segmented button.active {
+  background: var(--grid-row-selected);
+  color: var(--color-on-secondary-container);
+}
+
+.dg-colmenu {
+  position: absolute;
+  top: calc(100% - 6px);
+  right: 16px;
+  z-index: 30;
+  background: var(--grid-row-default);
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  box-shadow: var(--elevation-menu); /* Elevation/Menu */
+  padding: 6px 0 8px;
+  min-width: 220px;
+}
+
+.dg-colmenu-title {
+  font: 500 var(--type-label-lg-size) / var(--type-label-lg-lh) var(--font-family);
+  margin: 0;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--grid-border);
+}
+
+.dg-colmenu label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 var(--type-header-size) / var(--type-header-lh) var(--font-family);
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.dg-colmenu label:hover { background: var(--grid-row-hover); }
+
+.dg-drag { color: var(--grid-border); cursor: grab; }
+
+.dg-colmenu label[draggable] { user-select: none; }
+
+.dg-colmenu label.dragging { opacity: 0.4; }
+
+.dg-colmenu label.drop-target {
+  box-shadow: inset 0 2px 0 var(--grid-border-active);
+}
+
+/* ── Filter chips row ────────────────────────────────────────── */
+.dg-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--grid-border);
+  flex-wrap: wrap;
+}
+
+/* Figma Filter Chip: Color/Chips/Background, 32px, radius 8, label/medium text */
+.dg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 32px;
+  font: 500 var(--type-header-size) / var(--type-header-lh) var(--font-family);
+  letter-spacing: var(--type-header-track);
+  color: var(--color-on-surface);
+  background: var(--grid-chips-bg);
+  border-radius: 8px;
+  padding: 0 8px 0 10px;
+}
+
+.dg-chip button {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.dg-clearall {
+  font: 500 var(--type-header-size) / var(--type-header-lh) var(--font-family);
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+/* ── Bulk actions bar (Figma: Bulk Actions — 40px, Surface Bright) ── */
+.dg-bulk {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 16px;
+  background: var(--color-surface-bright);
+  border-bottom: 1px solid var(--grid-border);
+}
+
+.dg-bulk-count {
+  font: 500 var(--type-label-lg-size) / var(--type-label-lg-lh) var(--font-family);
+  letter-spacing: var(--type-label-lg-track);
+  color: var(--color-on-surface);
+  margin-right: 8px;
+}
+
+/* Actions are links (Color/Text/Link), not buttons — per the Figma component */
+.dg-bulk-link {
+  font: 500 var(--type-label-lg-size) / var(--type-label-lg-lh) var(--font-family);
+  letter-spacing: var(--type-label-lg-track);
+  color: var(--color-link);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dg-bulk-link:hover { text-decoration: underline; }
+
+/* ── Table ───────────────────────────────────────────────────── */
+.dg-scroll {
+  overflow: auto;
+  max-height: 420px;
+}
+
+.dg table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  /* Fixed layout keeps column widths stable when sorting/filtering reorders content */
+  table-layout: fixed;
+}
+
+.dg th,
+.dg td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Badge pills are components, not text — never show a truncation ellipsis */
+.dg td.badge-cell { text-overflow: clip; }
+
+.dg th {
+  font: 500 var(--type-header-size) / var(--type-header-lh) var(--font-family);
+  letter-spacing: var(--type-header-track);
+  color: var(--color-on-surface);
+  text-align: left;
+  /* Figma density/header-height is the total cell height — border-box + inset
+     divider keep the rendered height exactly 36/44/48 */
+  box-sizing: border-box;
+  height: var(--dg-header-h);
+  padding: 0 var(--dg-pad-x);
+  vertical-align: middle;
+  background: var(--grid-row-default);
+  box-shadow: inset 0 -1px 0 var(--grid-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+/* Sticky header earns its shadow only once rows scroll beneath it */
+.dg[data-scrolled-y='true'] th {
+  box-shadow: inset 0 -1px 0 var(--grid-border), var(--elevation-sticky-header);
+}
+
+.dg th.numeric { text-align: right; }
+.dg th.actions, .dg td.actions { width: 40px; text-align: center; }
+
+.dg-sortbtn {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dg-sorticon { color: var(--color-on-surface-variant); }
+
+/* Filterable header (Figma: Header Cell → Filter boolean) */
+.dg-headfilter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dg-iconbtn.dg-filterbtn {
+  width: 20px;
+  height: 20px;
+  color: var(--color-on-surface-variant);
+}
+
+.dg-iconbtn.dg-filterbtn.active { color: var(--color-primary); }
+
+/* Column filter dropdown — same anatomy as the Columns menu, Elevation/Menu */
+.dg-filterbackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.dg-filtermenu {
+  position: fixed;
+  z-index: 50;
+  background: var(--grid-row-default);
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  box-shadow: var(--elevation-menu);
+  padding: 6px 0 4px;
+  min-width: 180px;
+}
+
+.dg-filtermenu label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 var(--type-header-size) / var(--type-header-lh) var(--font-family);
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.dg-filtermenu label:hover { background: var(--grid-row-hover); }
+
+.dg-filtermenu .dg-clearall { margin: 4px 6px 2px; }
+
+.dg td {
+  font: 400 var(--type-cell-size) / var(--type-cell-lh) var(--font-family);
+  letter-spacing: var(--type-cell-track);
+  /* Figma density/row-height is the total row height (padding included) —
+     fixed border-box height + vertical centering render exactly 32/40/48,
+     with the divider as an inset shadow so it adds no height */
+  box-sizing: border-box;
+  height: var(--dg-row-h);
+  padding: 0 var(--dg-pad-x);
+  vertical-align: middle;
+  box-shadow: inset 0 -1px 0 var(--grid-border);
+  background: var(--grid-row-default);
+  white-space: nowrap;
+}
+
+.dg tr:last-child td { box-shadow: none; }
+
+/*
+ * Zebra: in Figma the "Zebra Background" layer is filled with
+ * Color/Row/Zebra at 50% layer opacity over the default row —
+ * mirrored here by blending the token 50/50 with the row default.
+ */
+.dg tr.zebra td {
+  background: color-mix(in srgb, var(--grid-row-zebra) 50%, var(--grid-row-default));
+}
+
+.dg tbody tr:hover td { background: var(--grid-row-hover); }
+
+.dg tr.selected td,
+.dg tbody tr.selected:hover td { background: var(--grid-row-selected); color: var(--color-on-secondary-container); }
+
+.dg tr.row-error td { background: var(--grid-row-error); }
+
+.dg tbody tr:focus-visible {
+  outline: 2px solid var(--grid-border-active);
+  outline-offset: -2px;
+}
+
+/* Numeric cells: tabular lining figures, right-aligned — same treatment
+   enabled on Accounting/body/small in Figma */
+.dg td.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.dg td.numeric.negative { color: var(--grid-value-negative); font-weight: 500; }
+.dg td.numeric.positive { color: var(--grid-value-positive); }
+
+/* ── Inline editing (Figma: Row Cell → State=Editing | Error) ── */
+.dg td.editable { cursor: text; }
+
+/* Editing: 1px Color/Cell/Border-Active inside stroke, per the Figma variant.
+   The cell surface stays row-default even under hover/zebra row fills. */
+.dg td.editing,
+.dg tr.zebra td.editing,
+.dg tbody tr:hover td.editing {
+  box-shadow: inset 0 0 0 1px var(--grid-border-active), inset 0 -1px 0 var(--grid-border);
+  background: var(--grid-row-default);
+}
+
+/* Error: Border-Error stroke + Background-Error fill + Text/Negative value —
+   the opaque error fill wins over every row state, as in Figma */
+.dg td.editing.cell-error,
+.dg tr.zebra td.editing.cell-error,
+.dg tbody tr:hover td.editing.cell-error {
+  box-shadow: inset 0 0 0 1px var(--grid-value-negative), inset 0 -1px 0 var(--grid-border);
+  background: var(--grid-row-error);
+}
+
+.dg td.editing.cell-error .dg-cell-input { color: var(--grid-value-negative); }
+
+.dg-cell-input {
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--color-on-surface);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  width: 100%;
+  min-width: 60px;
+}
+
+.dg td.numeric .dg-cell-input {
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* The cell's Border-Active stroke is the focus indicator while editing */
+.dg .dg-cell-input:focus-visible { outline: none; }
+
+/* Pinned first column (Header Cell → Pin) */
+.dg[data-pinned='true'] th.pinned,
+.dg[data-pinned='true'] td.pinned {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+}
+
+.dg[data-pinned='true'] th.pinned { z-index: 15; }
+
+.dg[data-pinned='true'][data-scrolled-x='true'] th.pinned,
+.dg[data-pinned='true'][data-scrolled-x='true'] td.pinned {
+  box-shadow: var(--elevation-frozen-column); /* Elevation/Frozen Column */
+}
+
+/* ── Status badges ───────────────────────────────────────────── */
+.dg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 500 var(--type-badge-size) / var(--type-badge-lh) var(--font-family);
+  letter-spacing: var(--type-badge-track);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.dg-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.dg-badge.success { background: var(--badge-success-bg); color: var(--badge-success-text); }
+.dg-badge.warning { background: var(--badge-warning-bg); color: var(--badge-warning-text); }
+.dg-badge.error   { background: var(--badge-error-bg);   color: var(--badge-error-text); }
+.dg-badge.neutral { background: var(--badge-neutral-bg); color: var(--badge-neutral-text); }
+.dg-badge.info    { background: var(--badge-info-bg);    color: var(--badge-info-text); }
+
+/* ── Checkbox ────────────────────────────────────────────────── */
+.dg input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
+
+.dg th.check, .dg td.check { width: 36px; padding-right: 0; }
+
+/* ── Empty / loading states ──────────────────────────────────── */
+.dg-empty {
+  text-align: center;
+  padding: 48px 16px !important;
+  color: var(--color-on-surface-variant);
+  font: 400 var(--type-input-size) / var(--type-input-lh) var(--font-family) !important;
+}
+
+.dg-skeleton {
+  display: block;
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--color-surface-low) 25%, var(--color-surface-container) 50%, var(--color-surface-low) 75%);
+  background-size: 200% 100%;
+  animation: dg-shimmer 1.4s infinite;
+}
+
+@keyframes dg-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Footer / pagination ─────────────────────────────────────── */
+.dg-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--grid-border);
+  font: 500 var(--type-label-lg-size) / var(--type-label-lg-lh) var(--font-family);
+  letter-spacing: var(--type-label-lg-track);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.dg-footer .dg-toolbar-spacer { flex: 1; }
+
+/* Figma: Table Footer "Showing 1 - 20 of 312" uses Accounting/label/medium */
+.dg-showing {
+  font: 500 var(--type-header-size) / var(--type-header-lh) var(--font-family);
+  letter-spacing: var(--type-header-track);
+  color: var(--color-on-surface);
+}
+
+.dg-pagebtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  color: var(--color-on-surface);
+  background: none;
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+
+.dg-pagebtn:hover:not(:disabled) { background: var(--grid-row-hover); }
+.dg-pagebtn:disabled { color: var(--grid-border); cursor: default; }
+
+.dg-pageselect {
+  appearance: none;
+  -webkit-appearance: none;
+  /* Figma: page number uses Accounting/body/small (12 Regular) */
+  font: 400 var(--type-cell-size) / var(--type-cell-lh) var(--font-family);
+  letter-spacing: var(--type-cell-track);
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--color-on-surface);
+  border: 1px solid var(--grid-border);
+  border-radius: 8px;
+  height: 32px;
+  padding: 0 24px 0 12px;
+  cursor: pointer;
+  /* custom chevron replaces the platform arrow (keyboard_arrow_down, On Surface Variant) */
+  background:
+    var(--grid-row-default)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='%23464554'%3E%3Cpath d='M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z'/%3E%3C/svg%3E")
+    no-repeat right 7px center;
+}
+
+.dg-pageselect:hover { background-color: var(--grid-row-hover); }
+
+/* Visible focus for every interactive element */
+.dg button:focus-visible,
+.dg input:focus-visible,
+.dg select:focus-visible {
+  outline: 2px solid var(--grid-border-active);
+  outline-offset: 1px;
+}
+
+/* The search wrapper's :focus-within ring is the single focus indicator —
+   suppress the inner input's ring to avoid a double outline */
+.dg .dg-search:focus-visible {
+  outline: none;
+}
