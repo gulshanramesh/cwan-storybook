@@ -482,7 +482,10 @@ export function DataGrid({
                 <input
                   type="checkbox"
                   checked={(columnFilters[filterMenu.colKey] ?? []).includes(value)}
-                  onChange={() => toggleColumnFilter(filterMenu.colKey, value)}
+                  onChange={() => {
+                    toggleColumnFilter(filterMenu.colKey, value);
+                    setFilterMenu(null); // apply and dismiss
+                  }}
                 />
                 {value}
               </label>
@@ -493,6 +496,7 @@ export function DataGrid({
               onClick={() => {
                 setColumnFilters((f) => ({ ...f, [filterMenu.colKey]: [] }));
                 setPage(0);
+                setFilterMenu(null);
               }}
             >
               Clear
