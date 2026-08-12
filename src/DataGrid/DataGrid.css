@@ -1,6 +1,7 @@
 /* DataGrid component styles — every color/size resolves to a token in tokens.css */
 
 .dg {
+  position: relative; /* anchor for the column filter menu */
   font-family: var(--font-family);
   color: var(--color-on-surface);
   background: var(--grid-row-default);
@@ -163,7 +164,7 @@
   position: absolute;
   top: calc(100% - 6px);
   right: 16px;
-  z-index: 30;
+  z-index: 50; /* above the dismiss backdrop */
   background: var(--grid-row-default);
   border: 1px solid var(--grid-border);
   border-radius: 8px;
@@ -375,7 +376,7 @@
 }
 
 .dg-filtermenu {
-  position: fixed;
+  position: absolute; /* anchored to .dg — scrolls with the grid */
   z-index: 50;
   background: var(--grid-row-default);
   border: 1px solid var(--grid-border);

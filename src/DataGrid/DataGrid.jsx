@@ -253,6 +253,8 @@ export function DataGrid({
       const next = { x: scrollLeft > 0, y: scrollTop > 0 };
       return next.x === s.x && next.y === s.y ? s : next;
     });
+    // header cells move under internal scroll — dismiss any open filter menu
+    setFilterMenu((m) => (m ? null : m));
   };
 
   const ariaSort = (key) => {
@@ -348,6 +350,7 @@ export function DataGrid({
         >
           <Icon name="settings" size={18} />
         </button>
+        {menuOpen && <div className="dg-filterbackdrop" onClick={() => setMenuOpen(false)} />}
         {menuOpen && (
           <div className="dg-colmenu" role="group" aria-label="Customize columns">
             <p className="dg-colmenu-title">Customize Columns</p>
@@ -543,9 +546,14 @@ export function DataGrid({
                         aria-expanded={filterMenu?.colKey === c.key}
                         aria-haspopup="true"
                         onClick={(e) => {
+                          // anchor to the grid, not the viewport, so the menu
+                          // stays attached to its header when the page scrolls
                           const r = e.currentTarget.getBoundingClientRect();
+                          const dgRect = e.currentTarget.closest('.dg').getBoundingClientRect();
                           setFilterMenu((m) =>
-                            m?.colKey === c.key ? null : { colKey: c.key, x: r.left, y: r.bottom + 6 }
+                            m?.colKey === c.key
+                              ? null
+                              : { colKey: c.key, x: r.left - dgRect.left, y: r.bottom - dgRect.top + 6 }
                           );
                         }}
                       >
