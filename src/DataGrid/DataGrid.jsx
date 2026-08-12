@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FilterIcon, Icon, SortIcon } from './icons.jsx';
 import { statusVariant } from './sampleData.js';
 import './tokens.css';
@@ -63,7 +64,7 @@ export function DataGrid({
   const [hidden, setHidden] = useState(() => new Set());
   const [selected, setSelected] = useState(() => new Set());
   const [page, setPage] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [colMenu, setColMenu] = useState(null); // { x, y } — document coords
   const [scrolled, setScrolled] = useState({ x: false, y: false });
   const [densityState, setDensityState] = useState(density);
   const [activeFilters, setActiveFilters] = useState(filters);
@@ -344,16 +345,29 @@ export function DataGrid({
           type="button"
           className="dg-iconbtn"
           aria-label="Columns"
-          aria-expanded={menuOpen}
+          aria-expanded={!!colMenu}
           aria-haspopup="true"
-          onClick={() => setMenuOpen((o) => !o)}
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setColMenu((m) =>
+              m ? null : { x: r.right + window.scrollX, y: r.bottom + window.scrollY + 6 }
+            );
+          }}
         >
           <Icon name="settings" size={18} />
         </button>
-        {menuOpen && <div className="dg-filterbackdrop" onClick={() => setMenuOpen(false)} />}
-        {menuOpen && (
-          <div className="dg-colmenu" role="group" aria-label="Customize columns">
-            <p className="dg-colmenu-title">Customize Columns</p>
+        {/* Portaled to <body> so the grid's overflow:hidden cannot clip it */}
+        {colMenu &&
+          createPortal(
+            <>
+              <div className="dg-filterbackdrop" onClick={() => setColMenu(null)} />
+              <div
+                className="dg-colmenu"
+                role="group"
+                aria-label="Customize columns"
+                style={{ left: colMenu.x, top: colMenu.y }}
+              >
+                <p className="dg-colmenu-title">Customize Columns</p>
             {orderedColumns.map((c) => (
               <label
                 key={c.key}
@@ -399,9 +413,11 @@ export function DataGrid({
                 />
                 {c.label}
               </label>
-            ))}
-          </div>
-        )}
+                ))}
+              </div>
+            </>,
+            document.body
+          )}
       </div>
 
       {/* ── Filter chips (Figma: Toolbar → State=Filters, Filter Chip) ── */}
@@ -446,9 +462,11 @@ export function DataGrid({
         </div>
       )}
 
-      {/* ── Column filter menu (Figma: Column Options pattern + Elevation/Menu) ── */}
-      {filterMenu && (
-        <>
+      {/* ── Column filter menu (Figma: Column Options pattern + Elevation/Menu),
+             portaled to <body> so the grid's overflow:hidden cannot clip it ── */}
+      {filterMenu &&
+        createPortal(
+          <>
           <div className="dg-filterbackdrop" onClick={() => setFilterMenu(null)} />
           <div
             className="dg-filtermenu"
@@ -480,8 +498,9 @@ export function DataGrid({
               Clear
             </button>
           </div>
-        </>
-      )}
+          </>,
+          document.body
+        )}
 
       {/* ── Bulk actions (Figma: Bulk Actions component) ── */}
       {selectable && selected.size > 0 && (
@@ -546,14 +565,17 @@ export function DataGrid({
                         aria-expanded={filterMenu?.colKey === c.key}
                         aria-haspopup="true"
                         onClick={(e) => {
-                          // anchor to the grid, not the viewport, so the menu
-                          // stays attached to its header when the page scrolls
+                          // document coordinates: the portaled menu scrolls with
+                          // the page, staying anchored under this header cell
                           const r = e.currentTarget.getBoundingClientRect();
-                          const dgRect = e.currentTarget.closest('.dg').getBoundingClientRect();
                           setFilterMenu((m) =>
                             m?.colKey === c.key
                               ? null
-                              : { colKey: c.key, x: r.left - dgRect.left, y: r.bottom - dgRect.top + 6 }
+                              : {
+                                  colKey: c.key,
+                                  x: r.left + window.scrollX,
+                                  y: r.bottom + window.scrollY + 6
+                                }
                           );
                         }}
                       >

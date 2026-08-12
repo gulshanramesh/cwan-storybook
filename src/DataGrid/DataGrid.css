@@ -160,11 +160,14 @@
   color: var(--color-on-secondary-container);
 }
 
+/* Portaled to <body>: right edge aligns to the trigger via translateX;
+   self-contained font/color since .dg inheritance doesn't reach portals */
 .dg-colmenu {
   position: absolute;
-  top: calc(100% - 6px);
-  right: 16px;
+  transform: translateX(-100%);
   z-index: 50; /* above the dismiss backdrop */
+  font-family: var(--font-family);
+  color: var(--color-on-surface);
   background: var(--grid-row-default);
   border: 1px solid var(--grid-border);
   border-radius: 8px;
@@ -376,8 +379,10 @@
 }
 
 .dg-filtermenu {
-  position: absolute; /* anchored to .dg — scrolls with the grid */
+  position: absolute; /* document-anchored via portal — scrolls with the page */
   z-index: 50;
+  font-family: var(--font-family);
+  color: var(--color-on-surface);
   background: var(--grid-row-default);
   border: 1px solid var(--grid-border);
   border-radius: 8px;
@@ -398,6 +403,14 @@
 .dg-filtermenu label:hover { background: var(--grid-row-hover); }
 
 .dg-filtermenu .dg-clearall { margin: 4px 6px 2px; }
+
+/* Portaled menus sit outside .dg — restate the checkbox treatment */
+.dg-colmenu input[type='checkbox'],
+.dg-filtermenu input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
 
 .dg td {
   font: 400 var(--type-cell-size) / var(--type-cell-lh) var(--font-family);

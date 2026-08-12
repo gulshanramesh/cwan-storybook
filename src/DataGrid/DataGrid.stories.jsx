@@ -1,4 +1,4 @@
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, screen, userEvent, within } from 'storybook/test';
 import { DataGrid } from './DataGrid.jsx';
 import { columns, data } from './sampleData.js';
 
@@ -208,7 +208,8 @@ export const ColumnFiltering = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: /filter status/i }));
-    await userEvent.click(await canvas.findByRole('checkbox', { name: 'Active' }));
+    // the menu is portaled to <body>, outside the story canvas — query the screen
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Active' }));
     await expect(await canvas.findByText('9 of 12 accounts')).toBeInTheDocument();
     await expect(canvas.getByText('Status: Active')).toBeInTheDocument();
     await expect(canvas.queryByText('Marcus Johnson')).not.toBeInTheDocument();
@@ -226,8 +227,9 @@ export const ColumnFiltering = {
 export const ColumnVisibility = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: /columns/i }));
-    await userEvent.click(canvas.getByRole('checkbox', { name: /country/i }));
+    await userEvent.click(canvas.getByRole('button', { name: /^columns$/i }));
+    // the menu is portaled to <body>, outside the story canvas — query the screen
+    await userEvent.click(await screen.findByRole('checkbox', { name: /country/i }));
     await expect(canvas.queryByRole('columnheader', { name: /country/i })).not.toBeInTheDocument();
   }
 };
