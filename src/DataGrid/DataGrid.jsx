@@ -217,6 +217,9 @@ export function DataGrid({
 
   const reorderColumn = (fromKey, toKey) => {
     if (!fromKey || !toKey || fromKey === toKey) return;
+    // the identity column (priority 1) is locked in first position
+    const lockedKey = columns.find((c) => (c.priority ?? 9) === 1)?.key;
+    if (fromKey === lockedKey || toKey === lockedKey) return;
     setOrder((o) => {
       const next = o.filter((k) => k !== fromKey);
       next.splice(next.indexOf(toKey), 0, fromKey);
@@ -609,7 +612,15 @@ export function DataGrid({
                 style={{ left: colMenu.x, top: colMenu.y }}
               >
                 <p className="dg-colmenu-title">Customize Columns</p>
-            {orderedColumns.map((c) => (
+            {orderedColumns.map((c) =>
+              (c.priority ?? 9) === 1 ? (
+                /* identity column: locked first, always visible */
+                <label key={c.key} className="locked">
+                  <Icon name="lock" size={14} className="dg-drag" />
+                  <input type="checkbox" checked disabled readOnly />
+                  {c.label}
+                </label>
+              ) : (
               <label
                 key={c.key}
                 draggable
@@ -654,7 +665,8 @@ export function DataGrid({
                 />
                 {c.label}
               </label>
-                ))}
+              )
+            )}
               </div>
             </>,
             document.body
