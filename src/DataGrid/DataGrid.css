@@ -424,12 +424,18 @@
 }
 
 /* Toolbar dropdown items (Saved Views) and filter section labels */
+/* Longhand font properties: identical to the filter/columns menu rows
+   (label/medium 12/16 Medium) — shorthand-proof and cache-diffable */
 .dg-menuitem {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  font: 500 var(--type-header-size) / var(--type-header-lh) var(--font-family);
+  font-family: var(--font-family);
+  font-size: var(--type-header-size);
+  font-weight: 500;
+  line-height: var(--type-header-lh);
+  letter-spacing: var(--type-header-track);
   color: var(--color-on-surface);
   background: none;
   border: none;
@@ -455,6 +461,19 @@
 .dg-menucheck {
   margin-left: auto;
   color: var(--color-primary);
+}
+
+/* Subtle column separators in the header — a short centered hairline at
+   each boundary hints that columns are resizable */
+.dg th:not(.check):not(.actions)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 16px;
+  background: color-mix(in srgb, var(--grid-border) 70%, transparent);
 }
 
 /* ── Column resize handle (pointer drag on the header edge) ── */
