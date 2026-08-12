@@ -7,7 +7,8 @@
   border: 1px solid var(--grid-border);
   border-radius: 8px;
   overflow: hidden;
-  max-width: 1160px;
+  /* Canvas conveniences — apps can override via these variables */
+  max-width: var(--dg-max-width, 1160px);
 }
 
 .dg-icon { display: inline-block; vertical-align: middle; flex: none; }
@@ -279,7 +280,7 @@
 /* ── Table ───────────────────────────────────────────────────── */
 .dg-scroll {
   overflow: auto;
-  max-height: 420px;
+  max-height: var(--dg-scroll-max-height, 420px);
 }
 
 .dg table {

@@ -33,13 +33,20 @@ const DENSITY_ICON = {
   comfortable: 'densityComfortable'
 };
 
+/* Stable empty defaults — inline `= []` defaults create a fresh array every
+   render, which re-fires the prop-sync effects below in an infinite loop
+   ("Maximum update depth exceeded") for any consumer omitting the prop. */
+const NO_COLUMNS = [];
+const NO_DATA = [];
+const NO_FILTERS = [];
+
 /**
  * Accounting DataGrid — Storybook mirror of the Figma "Complete DG" set.
  * Props map 1:1 to Figma component properties; see story argTypes.
  */
 export function DataGrid({
-  columns = [],
-  data = [],
+  columns = NO_COLUMNS,
+  data = NO_DATA,
   density = 'standard',
   zebra = true,
   sortable = true,
@@ -48,7 +55,7 @@ export function DataGrid({
   pagination = true,
   pageSize = 8,
   loading = false,
-  filters = [],
+  filters = NO_FILTERS,
   savedView = 'Saved View'
 }) {
   const [query, setQuery] = useState('');
@@ -69,10 +76,23 @@ export function DataGrid({
   const [filterMenu, setFilterMenu] = useState(null); // { colKey, x, y }
   const rowRefs = useRef([]);
 
-  // Keep internal state in sync when the Storybook control changes the prop
+  // Keep internal state in sync when the prop changes. The functional updates
+  // bail out on shallow-equal values, so even unstable array references from
+  // a consumer (inline literals) converge instead of re-rendering.
   useEffect(() => setDensityState(density), [density]);
-  useEffect(() => setActiveFilters(filters), [filters]);
-  useEffect(() => setOrder(columns.map((c) => c.key)), [columns]);
+  useEffect(() => {
+    setActiveFilters((prev) =>
+      prev === filters || (prev.length === filters.length && prev.every((v, i) => v === filters[i]))
+        ? prev
+        : filters
+    );
+  }, [filters]);
+  useEffect(() => {
+    setOrder((prev) => {
+      const next = columns.map((c) => c.key);
+      return prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next;
+    });
+  }, [columns]);
 
   // Column order follows the Customize Columns drag order
   const orderedColumns = order.map((k) => columns.find((c) => c.key === k)).filter(Boolean);
@@ -128,7 +148,10 @@ export function DataGrid({
     const out = [...filtered].sort((a, b) => {
       const av = a[sort.key];
       const bv = b[sort.key];
-      const cmp = col?.numeric ? av - bv : String(av).localeCompare(String(bv));
+      // Null-safe: empty numerics sort lowest, empty strings sort first
+      const cmp = col?.numeric
+        ? (av ?? -Infinity) - (bv ?? -Infinity)
+        : String(av ?? '').localeCompare(String(bv ?? ''));
       return sort.dir === 'asc' ? cmp : -cmp;
     });
     return out;
@@ -168,7 +191,8 @@ export function DataGrid({
   // ── Inline editing (Figma: Row Cell → State=Editing | Error) ──
   const startEdit = (row, col) => {
     if (!col.editable) return;
-    setEditing({ rowId: row.id, key: col.key, value: String(row[col.key]), error: false });
+    const current = row[col.key];
+    setEditing({ rowId: row.id, key: col.key, value: current == null ? '' : String(current), error: false });
   };
 
   const commitEdit = () => {
@@ -637,12 +661,15 @@ export function DataGrid({
                         );
                       }
                       if (c.numeric) {
-                        const cls = ['numeric', value < 0 ? 'negative' : '', c.editable ? 'editable' : '', pinned]
+                        // Null/undefined renders as "–" (per the design's Pending
+                        // rows) — never a fabricated $0.00
+                        const isEmpty = value == null;
+                        const cls = ['numeric', !isEmpty && value < 0 ? 'negative' : '', c.editable ? 'editable' : '', pinned]
                           .join(' ')
                           .trim();
                         return (
                           <td key={c.key} className={cls} onDoubleClick={() => startEdit(row, c)}>
-                            {c.currencyFrom ? fmtCurrency(value, row[c.currencyFrom]) : fmtNumber(value)}
+                            {isEmpty ? '–' : c.currencyFrom ? fmtCurrency(value, row[c.currencyFrom]) : fmtNumber(value)}
                           </td>
                         );
                       }
