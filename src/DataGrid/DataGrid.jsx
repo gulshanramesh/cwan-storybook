@@ -90,6 +90,9 @@ export function DataGrid({
   const [viewLabel, setViewLabel] = useState(savedView);
   const rowRefs = useRef([]);
   const rootRef = useRef(null);
+  const filterMenuRef = useRef(null);
+  const toolbarMenuRef = useRef(null);
+  const colMenuRef = useRef(null);
 
   useEffect(() => setViewLabel(savedView), [savedView]);
 
@@ -116,6 +119,36 @@ export function DataGrid({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Keep every dropdown panel inside the browser viewport: shift horizontally
+  // when it would overflow an edge, flip above the anchor when there is no
+  // room below. Runs once per open (guarded by the `clamped` flag).
+  const useViewportClamp = (state, setState, ref) => {
+    useEffect(() => {
+      if (!state || state.clamped) return;
+      const el = ref.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let dx = 0;
+      let dy = 0;
+      if (r.right > vw - 8) dx = vw - 8 - r.right;
+      if (r.left + dx < 8) dx = 8 - r.left;
+      if (r.bottom > vh - 8) {
+        const flippedTop = (state.anchorTop ?? r.top) - r.height - 6;
+        dy = flippedTop >= 8 ? flippedTop - r.top : vh - 8 - r.bottom;
+      }
+      if (dx !== 0 || dy !== 0) {
+        setState((s) => (s ? { ...s, x: s.x + dx, y: s.y + dy, clamped: true } : s));
+      } else {
+        setState((s) => (s ? { ...s, clamped: true } : s));
+      }
+    }, [state, setState, ref]);
+  };
+  useViewportClamp(filterMenu, setFilterMenu, filterMenuRef);
+  useViewportClamp(toolbarMenu, setToolbarMenu, toolbarMenuRef);
+  useViewportClamp(colMenu, setColMenu, colMenuRef);
 
   // Keep internal state in sync when the prop changes. The functional updates
   // bail out on shallow-equal values, so even unstable array references from
@@ -307,6 +340,12 @@ export function DataGrid({
     if (!editing) return;
     const col = columns.find((c) => c.key === editing.key);
     let value = editing.value.trim();
+    // Clearing a value is not a valid commit — show the Error cell state
+    // rather than accepting an empty cell (Escape reverts instead)
+    if (value === '') {
+      setEditing((e) => ({ ...e, error: true }));
+      return false;
+    }
     if (col?.numeric) {
       // Strip formatting only (thousands separators, currency prefix) — anything
       // else must parse as a number or the cell enters the Error state
@@ -435,7 +474,7 @@ export function DataGrid({
             setToolbarMenu((m) =>
               m?.kind === 'saved'
                 ? null
-                : { kind: 'saved', x: r.left + window.scrollX, y: r.bottom + window.scrollY + 6 }
+                : { kind: 'saved', x: r.left + window.scrollX, y: r.bottom + window.scrollY + 6, anchorTop: r.top }
             );
           }}
         >
@@ -454,7 +493,7 @@ export function DataGrid({
             setToolbarMenu((m) =>
               m?.kind === 'filters'
                 ? null
-                : { kind: 'filters', x: r.left + window.scrollX, y: r.bottom + window.scrollY + 6 }
+                : { kind: 'filters', x: r.left + window.scrollX, y: r.bottom + window.scrollY + 6, anchorTop: r.top }
             );
           }}
         >
@@ -468,6 +507,7 @@ export function DataGrid({
             <>
               <div className="dg-filterbackdrop" onClick={() => setToolbarMenu(null)} />
               <div
+                ref={toolbarMenuRef}
                 className="dg-filtermenu"
                 role="group"
                 aria-label={toolbarMenu.kind === 'saved' ? 'Saved views' : 'Filters'}
@@ -481,14 +521,13 @@ export function DataGrid({
                         key={view.label}
                         type="button"
                         className="dg-menuitem"
+                        aria-pressed={viewLabel === view.label}
                         onClick={() => applySavedView(view)}
                       >
-                        <Icon
-                          name="check"
-                          size={14}
-                          className={viewLabel === view.label ? '' : 'dg-invisible'}
-                        />
                         {view.label}
+                        {viewLabel === view.label && (
+                          <Icon name="check" size={14} className="dg-menucheck" />
+                        )}
                       </button>
                     ))}
                   </>
@@ -551,7 +590,7 @@ export function DataGrid({
           onClick={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
             setColMenu((m) =>
-              m ? null : { x: r.right + window.scrollX, y: r.bottom + window.scrollY + 6 }
+              m ? null : { x: r.right + window.scrollX, y: r.bottom + window.scrollY + 6, anchorTop: r.top }
             );
           }}
         >
@@ -563,6 +602,7 @@ export function DataGrid({
             <>
               <div className="dg-filterbackdrop" onClick={() => setColMenu(null)} />
               <div
+                ref={colMenuRef}
                 className="dg-colmenu"
                 role="group"
                 aria-label="Customize columns"
@@ -670,6 +710,7 @@ export function DataGrid({
           <>
           <div className="dg-filterbackdrop" onClick={() => setFilterMenu(null)} />
           <div
+            ref={filterMenuRef}
             className="dg-filtermenu"
             role="group"
             aria-label={`Filter by ${columns.find((c) => c.key === filterMenu.colKey)?.label}`}
@@ -859,7 +900,8 @@ export function DataGrid({
                               : {
                                   colKey: c.key,
                                   x: r.left + window.scrollX,
-                                  y: r.bottom + window.scrollY + 6
+                                  y: r.bottom + window.scrollY + 6,
+                                  anchorTop: r.top
                                 }
                           );
                         }}
