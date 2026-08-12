@@ -467,10 +467,19 @@ export function DataGrid({
       )}
 
       <div className="dg-scroll" onScroll={onScroll}>
-        <table>
+        {/* min-width = sum of column widths, so narrow containers scroll
+            horizontally instead of crushing columns into truncated headers */}
+        <table
+          style={{
+            minWidth:
+              (selectable ? 40 : 0) +
+              44 +
+              visibleColumns.reduce((sum, c) => sum + (c.width ?? 120), 0)
+          }}
+        >
           {/* Fixed layout: column widths stay stable across sorting, filtering, and paging */}
           <colgroup>
-            {selectable && <col style={{ width: 36 }} />}
+            {selectable && <col style={{ width: 40 }} />}
             {visibleColumns.map((c) => (
               <col key={c.key} style={c.width ? { width: c.width } : undefined} />
             ))}

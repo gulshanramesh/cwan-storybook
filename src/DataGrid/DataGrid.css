@@ -296,6 +296,10 @@
   text-overflow: ellipsis;
 }
 
+/* Headers are fixed text sized to fit — never show a truncation ellipsis.
+   Only cell values (variable data) may ellipsize. */
+.dg th { text-overflow: clip; }
+
 /* Badge pills are components, not text — never show a truncation ellipsis */
 .dg td.badge-cell { text-overflow: clip; }
 
@@ -525,7 +529,11 @@
   accent-color: var(--color-primary);
 }
 
-.dg th.check, .dg td.check { width: 36px; padding-right: 0; }
+.dg th.check, .dg td.check {
+  width: 40px;
+  padding-left: 12px; /* fixed inset — density padding would overflow the 40px column */
+  padding-right: 0;
+}
 
 /* ── Empty / loading states ──────────────────────────────────── */
 .dg-empty {

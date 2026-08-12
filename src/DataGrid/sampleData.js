@@ -4,15 +4,17 @@
  * Active → success, Pending → warning, Inactive → neutral, Suspended → error.
  */
 
+/* Column widths are sized so the header (label + sort/filter icon + widest
+   density padding) always fits — headers never truncate; only cell values do. */
 export const columns = [
-  { key: 'name', label: 'Customer Name', sortable: true, editable: true, width: 150 },
-  { key: 'account', label: 'Account #', sortable: true, width: 105 },
-  { key: 'type', label: 'Account Type', sortable: true, width: 140 },
+  { key: 'name', label: 'Customer Name', sortable: true, editable: true, width: 158 },
+  { key: 'account', label: 'Account #', sortable: true, width: 128 },
+  { key: 'type', label: 'Account Type', sortable: true, width: 150 },
   { key: 'status', label: 'Status', badge: true, sortable: false, filter: true, width: 130 },
-  { key: 'balance', label: 'Balance', numeric: true, sortable: true, currencyFrom: 'currency', editable: true, width: 125 },
-  { key: 'currency', label: 'Currency', sortable: false, width: 85 },
-  { key: 'lastActivity', label: 'Last Activity', sortable: true, width: 115 },
-  { key: 'country', label: 'Country', sortable: false, filter: true, width: 120 }
+  { key: 'balance', label: 'Balance', numeric: true, sortable: true, currencyFrom: 'currency', editable: true, width: 130 },
+  { key: 'currency', label: 'Currency', sortable: false, width: 102 },
+  { key: 'lastActivity', label: 'Last Activity', sortable: true, width: 142 },
+  { key: 'country', label: 'Country', sortable: false, filter: true, width: 126 }
 ];
 
 export const statusVariant = {
