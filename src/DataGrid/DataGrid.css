@@ -503,19 +503,42 @@
 /* The cell's Border-Active stroke is the focus indicator while editing */
 .dg .dg-cell-input:focus-visible { outline: none; }
 
-/* Pinned first column (Header Cell → Pin) */
-.dg[data-pinned='true'] th.pinned,
-.dg[data-pinned='true'] td.pinned {
+/* ── Sticky first + last columns (Figma: Header Cell → Pin, Elevation/
+      Frozen Column). Built-in layout behavior: engages whenever the grid
+      is narrower than the table; inert when everything fits. ── */
+.dg { --dg-pin-left: 0px; }
+.dg[data-selectable='true'] { --dg-pin-left: 40px; } /* checkbox col width */
+
+.dg th.check, .dg td.check {
   position: sticky;
   left: 0;
   z-index: 5;
 }
 
-.dg[data-pinned='true'] th.pinned { z-index: 15; }
+.dg th.pinned, .dg td.pinned {
+  position: sticky;
+  left: var(--dg-pin-left);
+  z-index: 5;
+}
 
-.dg[data-pinned='true'][data-scrolled-x='true'] th.pinned,
-.dg[data-pinned='true'][data-scrolled-x='true'] td.pinned {
+.dg th.actions, .dg td.actions {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+}
+
+/* corner cells: above both the sticky header row and body cells */
+.dg th.check, .dg th.pinned, .dg th.actions { z-index: 15; }
+
+/* Edge shadows appear only when content is actually hidden on that side */
+.dg[data-scrolled-x='true'] th.pinned,
+.dg[data-scrolled-x='true'] td.pinned {
   box-shadow: var(--elevation-frozen-column); /* Elevation/Frozen Column */
+}
+
+.dg[data-scrolled-x-end='true'] th.actions,
+.dg[data-scrolled-x-end='true'] td.actions {
+  box-shadow: var(--elevation-frozen-column-end); /* mirrored right edge */
 }
 
 /* ── Status badges ───────────────────────────────────────────── */

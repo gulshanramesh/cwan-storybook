@@ -142,11 +142,12 @@ export function SystemTokens() {
 }
 
 export function ElevationTokens() {
-  const names = ['--elevation-sticky-header', '--elevation-frozen-column', '--elevation-menu'];
+  const names = ['--elevation-sticky-header', '--elevation-frozen-column', '--elevation-frozen-column-end', '--elevation-menu'];
   const vals = useRootTokens(names);
   const rows = [
     { token: '--elevation-sticky-header', figma: 'Data Grid/Elevation/Sticky Header', usage: 'Header row, Scrolled state only' },
-    { token: '--elevation-frozen-column', figma: 'Data Grid/Elevation/Frozen Column', usage: 'Pinned column edge while horizontally scrolled' },
+    { token: '--elevation-frozen-column', figma: 'Data Grid/Elevation/Frozen Column', usage: 'Pinned first-column edge while horizontally scrolled' },
+    { token: '--elevation-frozen-column-end', figma: 'Elevation/Frozen Column (mirrored)', usage: 'Pinned actions-column edge while content hides to the right' },
     { token: '--elevation-menu', figma: 'Data Grid/Elevation/Menu', usage: 'Column Options, filter menus, dropdowns' }
   ];
   return (

@@ -52,7 +52,6 @@ export function DataGrid({
   zebra = true,
   sortable = true,
   selectable = false,
-  pinnedFirstColumn = false,
   pagination = true,
   pageSize = 8,
   loading = false,
@@ -65,7 +64,17 @@ export function DataGrid({
   const [selected, setSelected] = useState(() => new Set());
   const [page, setPage] = useState(0);
   const [colMenu, setColMenu] = useState(null); // { x, y } — document coords
-  const [scrolled, setScrolled] = useState({ x: false, y: false });
+  const [scrolled, setScrolled] = useState({ x: false, y: false, xEnd: false });
+  const scrollRef = useRef(null);
+
+  // Detect horizontal overflow on mount and layout changes so the right-edge
+  // pin shadow shows before the user ever scrolls
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const xEnd = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    setScrolled((s) => (s.xEnd === xEnd ? s : { ...s, xEnd }));
+  });
   const [densityState, setDensityState] = useState(density);
   const [activeFilters, setActiveFilters] = useState(filters);
   const [order, setOrder] = useState(() => columns.map((c) => c.key));
@@ -249,10 +258,14 @@ export function DataGrid({
   };
 
   const onScroll = (e) => {
-    const { scrollLeft, scrollTop } = e.currentTarget;
+    const { scrollLeft, scrollTop, clientWidth, scrollWidth } = e.currentTarget;
     setScrolled((s) => {
-      const next = { x: scrollLeft > 0, y: scrollTop > 0 };
-      return next.x === s.x && next.y === s.y ? s : next;
+      const next = {
+        x: scrollLeft > 0,
+        y: scrollTop > 0,
+        xEnd: scrollLeft + clientWidth < scrollWidth - 1
+      };
+      return next.x === s.x && next.y === s.y && next.xEnd === s.xEnd ? s : next;
     });
     // header cells move under internal scroll — dismiss any open filter menu
     setFilterMenu((m) => (m ? null : m));
@@ -272,8 +285,9 @@ export function DataGrid({
     <div
       className="dg"
       data-density={densityState}
-      data-pinned={pinnedFirstColumn}
+      data-selectable={selectable}
       data-scrolled-x={scrolled.x}
+      data-scrolled-x-end={scrolled.xEnd}
       data-scrolled-y={scrolled.y}
     >
       {/* ── Toolbar (Figma: Toolbar component) ── */}
@@ -516,7 +530,7 @@ export function DataGrid({
         </div>
       )}
 
-      <div className="dg-scroll" onScroll={onScroll}>
+      <div className="dg-scroll" ref={scrollRef} onScroll={onScroll}>
         {/* min-width = sum of column widths, so narrow containers scroll
             horizontally instead of crushing columns into truncated headers */}
         <table
@@ -551,7 +565,7 @@ export function DataGrid({
                 <th
                   key={c.key}
                   scope="col"
-                  className={[c.numeric ? 'numeric' : '', i === 0 && pinnedFirstColumn ? 'pinned' : ''].join(' ')}
+                  className={[c.numeric ? 'numeric' : '', i === 0 ? 'pinned' : ''].join(' ')}
                   aria-sort={sortable && c.sortable ? ariaSort(c.key) : undefined}
                 >
                   {sortable && c.sortable ? (
@@ -651,7 +665,7 @@ export function DataGrid({
                     )}
                     {visibleColumns.map((c, ci) => {
                       const value = row[c.key];
-                      const pinned = ci === 0 && pinnedFirstColumn ? 'pinned' : '';
+                      const pinned = ci === 0 ? 'pinned' : '';
                       const isEditing = editing && editing.rowId === row.id && editing.key === c.key;
 
                       if (isEditing) {

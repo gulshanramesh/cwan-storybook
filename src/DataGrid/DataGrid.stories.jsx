@@ -18,7 +18,6 @@ export default {
     zebra: true,
     sortable: true,
     selectable: true,
-    pinnedFirstColumn: false,
     pagination: true,
     pageSize: 8,
     loading: false,
@@ -57,12 +56,6 @@ export default {
     selectable: {
       control: 'boolean',
       description: 'Figma: Table Row → Checkbox boolean; enables the Bulk Actions pattern.',
-      table: { category: 'Figma properties' }
-    },
-    pinnedFirstColumn: {
-      control: 'boolean',
-      description:
-        'Figma: Header Cell → Pin boolean. Frozen column edge uses Elevation/Frozen Column (x2 blur4 25%) once horizontally scrolled.',
       table: { category: 'Figma properties' }
     },
     pagination: {
@@ -111,9 +104,14 @@ export const FiltersApplied = {
   args: { filters: ['Status: Active', 'Type: Savings'], savedView: 'Q3 Review' }
 };
 
-/** Header Cell → Pin: first column stays put during horizontal scroll and earns its edge shadow. */
+/**
+ * Built-in responsive behavior (Figma: Header Cell → Pin + Elevation/Frozen
+ * Column): when the grid is narrower than the table, the first and last
+ * columns pin automatically — identity stays visible on the left, row actions
+ * on the right — with edge shadows only on sides hiding content.
+ */
 export const PinnedFirstColumn = {
-  args: { pinnedFirstColumn: true },
+  name: 'Sticky Columns (Narrow)',
   parameters: { layout: 'padded' },
   render: (args) => (
     <div style={{ maxWidth: 560 }}>

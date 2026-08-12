@@ -46,6 +46,7 @@
   /* ── Data Grid / Elevation (effect styles) ──────────────────── */
   --elevation-sticky-header: 0 2px 4px rgba(0, 0, 0, 0.25); /* Elevation/Sticky Header */
   --elevation-frozen-column: 2px 0 4px rgba(0, 0, 0, 0.25); /* Elevation/Frozen Column */
+  --elevation-frozen-column-end: -2px 0 4px rgba(0, 0, 0, 0.25); /* mirrored — right-pinned actions edge */
   --elevation-menu: 0 4px 4px rgba(0, 0, 0, 0.15);          /* Elevation/Menu */
 
   /* ── Typography (Accounting ramp, M3 verbatim) ──────────────── */
