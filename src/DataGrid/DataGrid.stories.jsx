@@ -25,65 +25,58 @@ export default {
     savedView: 'Saved View'
   },
   argTypes: {
-    filters: {
-      control: 'object',
-      description:
-        'Figma: Toolbar → State=Filters | No filters, with Filter Chip components. Chips are removable; "Clear all" empties the set.',
-      table: { category: 'Figma properties' }
-    },
-    savedView: {
-      control: 'text',
-      description:
-        'Figma: Toolbar → Saved View select. Interactive: opens a preset-view menu (filters/sort combinations); the Filters button opens grouped per-column value filters.',
-      table: { category: 'Figma properties' }
-    },
     density: {
       control: 'inline-radio',
       options: ['compact', 'standard', 'comfortable'],
       description:
-        'Figma: Complete DG → Density variant, driven by the "Data Grid / Density" variable modes (row 32/40/48, header 36/44/48, padding 12·8/16·12/20·16).',
-      table: { category: 'Figma properties' }
+        'Row density. Figma: Complete DG → Density variant, driven by the "Data Grid / Density" variable modes (row 32/40/48, header 36/44/48, padding 12·8/16·12/20·16).'
     },
     zebra: {
       control: 'boolean',
-      description: 'Figma: Table Row → Zebra. Muted striping via Color/Row/Zebra (Surface Container Low).',
-      table: { category: 'Figma properties' }
+      description:
+        'Alternating row striping. Figma: Table Row → Zebra, using Color/Row/Zebra (Surface Container Low) at 50%.'
     },
     sortable: {
       control: 'boolean',
-      description: 'Figma: Header Cell → Sortable boolean + Sorting variants (Default/Ascending/Descending).',
-      table: { category: 'Figma properties' }
+      description:
+        'Enables column sorting. Figma: Header Cell → Sortable boolean + Sorting variants (Default/Ascending/Descending).'
     },
     selectable: {
       control: 'boolean',
-      description: 'Figma: Table Row → Checkbox boolean; enables the Bulk Actions pattern.',
-      table: { category: 'Figma properties' }
+      description:
+        'Adds the checkbox column and bulk actions bar. Figma: Table Row → Checkbox boolean; Bulk Actions component.'
     },
     pagination: {
       control: 'boolean',
-      description: 'Figma: Table Footer → Type=Pagination | No Pagination.',
-      table: { category: 'Figma properties' }
+      description: 'Shows the paginated footer. Figma: Table Footer → Type=Pagination | No Pagination.'
     },
     pageSize: {
       control: { type: 'number', min: 4, max: 50 },
-      description: 'Rows per page when pagination is on.',
-      table: { category: 'Data' }
+      description: 'Rows per page when pagination is on.'
+    },
+    loading: {
+      control: 'boolean',
+      description: 'Renders skeleton rows while data loads.'
+    },
+    filters: {
+      control: 'object',
+      description:
+        'Active filter chips shown above the grid. Figma: Toolbar → State=Filters | No filters, with Filter Chip components. Chips are removable; "Clear all" empties the set.'
+    },
+    savedView: {
+      control: 'text',
+      description:
+        'Label on the saved-view button. Figma: Toolbar → Saved View select. Opens a preset-view menu (filter/sort combinations).'
     },
     columns: {
       control: 'object',
       description:
-        'Column definitions: key, label, numeric, badge, sortable, filter, editable, currencyFrom, width, priority. Editable maps to Figma Row Cell → State=Editing | Error; filter maps to Header Cell → Filter; priority drives responsive auto-hiding. All columns are pointer-resizable via the header edge.',
-      table: { category: 'Data' }
+        'Column definitions: key, label, numeric, badge, sortable, filter, editable, currencyFrom, width, priority. Editable maps to Figma Row Cell → State=Editing | Error; filter maps to Header Cell → Filter; priority drives responsive auto-hiding. All columns are pointer-resizable from the header edge.'
     },
     data: {
       control: 'object',
-      description: 'Row objects. A negative balance renders in Color/Value/Negative.',
-      table: { category: 'Data' }
-    },
-    loading: {
-      control: 'boolean',
-      description: 'State: skeleton rows while data loads.',
-      table: { category: 'States' }
+      description:
+        'Row objects keyed to the column definitions. Negative values render in Color/Value/Negative; null renders as an en dash.'
     }
   }
 };

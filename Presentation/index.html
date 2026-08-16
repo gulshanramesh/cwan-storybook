@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWAN · Data Grid – Design Exercise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+  :root{
+    --bg:#0f1114;
+    --text:#eef1f4;
+    --muted:#98a1ab;
+    --faint:#7d8791;
+    --accent:#5bc4ff;
+    --line:rgba(238,241,244,.14);
+    --line-strong:rgba(238,241,244,.26);
+    --head:'Inter Tight','Inter',-apple-system,sans-serif;
+    --body:'Inter',-apple-system,sans-serif;
+    --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    --c0:#5bc4ff;--c1:#ffb35c;--c2:#b39dff;--c3:#5de8a1;--c4:#ff8fa3;
+    --on-accent:#0f1114;
+    --panel-dark:#161a20;
+    --pos:#5de8a1;--neg:#ff8fa3;
+  }
+  html.light{
+    --bg:#f4f6f8;
+    --text:#171c22;
+    --muted:#4b5560;
+    --faint:#5d6873;
+    --line:rgba(23,28,34,.14);
+    --line-strong:rgba(23,28,34,.28);
+    --c0:#0672c4;--c1:#E14700;--c2:#6a4fd0;--c3:#0e8a52;--c4:#c9314e;
+    --on-accent:#fff;
+    --panel-dark:#ffffff;
+    --pos:#0e8a52;--neg:#c9314e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--body);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;-webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent);color:var(--on-accent)}
+
+  /* full-bleed ambient glow, synced to the active slide */
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .65s ease}
+  body.glowing::before{opacity:1}
+  body[data-glow="title"]::before{background:
+    radial-gradient(46vw 34vh at 90% -14%,rgba(91,196,255,.08),transparent 65%),
+    radial-gradient(60vw 42vh at 12% 108%,rgba(91,196,255,.15),transparent 65%)}
+  body[data-glow="figma"]::before{background:
+    radial-gradient(60vw 42vh at 88% -8%,rgba(255,179,92,.13),transparent 65%)}
+  body[data-glow="sb"]::before{background:
+    radial-gradient(60vw 42vh at 88% -8%,rgba(179,157,255,.13),transparent 65%)}
+  body[data-glow="ai"]::before{background:
+    radial-gradient(60vw 42vh at 88% -8%,rgba(93,232,161,.12),transparent 65%)}
+  body[data-glow="thanks"]::before{background:
+    radial-gradient(60vw 45vh at 50% 118%,rgba(255,143,163,.15),transparent 65%)}
+
+  /* ── stage ──────────────────────────────────────── */
+  .shell{width:min(92vw,146svh);display:flex;flex-direction:column;gap:2.4svh;container-type:inline-size}
+  .stage{
+    position:relative;aspect-ratio:16/9;width:100%;
+    overflow:hidden;container-type:size;
+    border:1px solid var(--line);border-radius:.6cqw;
+  }
+  .track{display:flex;height:100%;transition:transform .65s cubic-bezier(.66,0,.34,1);will-change:transform}
+  .slide{
+    flex:0 0 100%;height:100%;
+    padding:11cqh 8cqw 12cqh;
+    display:flex;flex-direction:column;justify-content:center;
+    position:relative;
+  }
+
+  /* ── type ───────────────────────────────────────── */
+  h1,h2{font-family:var(--head);font-weight:700;letter-spacing:-.028em;line-height:1.06;text-wrap:balance}
+  h1{font-size:5.4cqw}
+  h2{font-size:2.7cqw;margin-bottom:1.5cqh}
+  h3{font-family:var(--head);font-weight:600;font-size:1.35cqw;letter-spacing:-.012em;margin-bottom:.7cqh}
+  .lede{font-size:1.1cqw;line-height:1.55;color:var(--muted);max-width:60ch}
+  .num{font-variant-numeric:tabular-nums}
+  .dot{color:var(--accent)}
+  .hl{color:var(--accent)}
+  .step{display:inline-block;font-size:.82cqw;font-weight:600;letter-spacing:.22em;
+    text-transform:uppercase;margin-bottom:2.2cqh;color:var(--accent)}
+  .pull{margin-top:2.8cqh;font-family:var(--body);font-weight:300;font-size:2.1cqw;line-height:1.4;
+    letter-spacing:-.01em;color:var(--text);max-width:66cqw;text-wrap:balance}
+  .footline{margin-top:3.4cqh;font-size:.95cqw;color:var(--faint);max-width:78ch;line-height:1.6}
+  .footline b{color:var(--text);font-weight:600}
+  code{font-family:var(--mono);font-size:.9em;color:var(--accent)}
+
+  /* ── reveal ─────────────────────────────────────── */
+  .a{opacity:0;transform:translateX(3cqw);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
+  .slide.active .a{opacity:1;transform:none}
+  .slide.active .a:nth-child(2){transition-delay:.07s}
+  .slide.active .a:nth-child(3){transition-delay:.14s}
+  .slide.active .a:nth-child(4){transition-delay:.21s}
+  .slide.active .a:nth-child(5){transition-delay:.28s}
+
+  /* ── HUD ────────────────────────────────────────── */
+  .hud{display:flex;align-items:center;justify-content:space-between;gap:2cqw}
+  .hud .count{font-size:.92cqw;letter-spacing:.16em;color:var(--faint)}
+  .hud .count b{color:var(--text);font-weight:600}
+  .hud .thumbs{flex:1;min-width:0;display:flex;gap:.25cqw}
+  .thumb{
+    flex:1;min-width:0;aspect-ratio:16/9;display:block;
+    padding:0;border:1px solid var(--line);border-radius:.25cqw;
+    background:var(--bg);cursor:pointer;overflow:hidden;position:relative;transition:border-color .25s;
+  }
+  .thumb .tclone{position:absolute;left:0;top:0;width:1600px;height:900px;
+    container-type:size;transform-origin:0 0;pointer-events:none;background:var(--bg)}
+  .thumb .slide{width:100%;height:100%}
+  .thumb.chgap{margin-left:1.5cqw}
+  .thumb:hover{border-color:var(--line-strong)}
+  .thumb.cur{border-color:var(--accent)}
+  .thumb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .thumb .a,.thumb .quad .qitem,.thumb .stop,.thumb .prob{opacity:1 !important;transform:none !important;transition:none !important}
+  .thumb .rule{transform:none !important;transition:none !important}
+  .hud .nav{display:flex;gap:.6cqw}
+  .hud .nav button{
+    width:2.6cqw;height:2.6cqw;min-width:30px;min-height:30px;
+    border:1px solid var(--line-strong);border-radius:50%;background:none;cursor:pointer;
+    color:var(--muted);display:grid;place-items:center;
+    transition:border-color .25s,color .25s,background .25s;
+  }
+  .hud .nav button i{font-size:max(1.05cqw,13px);line-height:1}
+  .hud .nav button:hover{border-color:var(--accent);color:var(--accent);
+    background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .hud .nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  html:not(.light) .ic-moon{display:none}
+  html.light .ic-sun{display:none}
+
+  /* ── structures ─────────────────────────────────── */
+  .cols{display:grid;gap:3cqw;margin-top:1cqh}
+  .cols.c2{grid-template-columns:repeat(2,1fr)}
+  .cols.c2w{grid-template-columns:1.15fr .85fr}
+  .cols.c3{grid-template-columns:repeat(3,1fr)}
+  .col{padding-top:.4cqh}
+  .col .tick{width:1.3cqw;height:.32cqh;background:var(--accent);margin-bottom:1.8cqh}
+  .col p{color:var(--muted);font-size:1.02cqw;line-height:1.5}
+
+  .sys{margin-top:2.4cqh;display:grid;gap:1.45cqh}
+  .sys span{font-size:1cqw;color:var(--muted);padding-left:2.1cqw;position:relative;line-height:1.5;display:block}
+  .sys span::before{content:"";position:absolute;left:0;top:.75cqh;width:1.1cqw;height:1px;background:var(--accent)}
+  .sys span b{color:var(--text);font-weight:600}
+  .sys.tight{gap:1.15cqh}
+  .sys.tight span{font-size:.95cqw}
+
+  .probs{margin-top:3.4cqh;display:grid}
+  .prob{display:flex;align-items:baseline;gap:2.6cqw;padding:2.6cqh 0;border-top:1px solid var(--line)}
+  .prob .pnum{font-family:var(--head);font-weight:700;font-size:2cqw;color:var(--accent);flex:none}
+  .prob b{display:block;font-family:var(--head);font-weight:600;font-size:1.7cqw;letter-spacing:-.018em;margin-bottom:.6cqh}
+  .prob p{color:var(--muted);font-size:1.02cqw;line-height:1.55;max-width:56cqw}
+  .slide.active .probs .a:nth-child(1){transition-delay:.25s}
+  .slide.active .probs .a:nth-child(2){transition-delay:.4s}
+  .slide.active .probs .a:nth-child(3){transition-delay:.55s}
+  .slide.active .probs .a:nth-child(4){transition-delay:.7s}
+
+  /* spectrum rail */
+  .spectrum{display:grid;grid-template-columns:repeat(3,1fr);gap:2.6cqw;margin-top:3.4cqh;position:relative}
+  .spectrum::before{content:"";position:absolute;left:0;right:0;top:.45cqh;height:1px;background:var(--line-strong)}
+  .stop{padding-top:2.4cqh;position:relative;opacity:0;transform:translateY(1.6cqh)}
+  .slide.active .stop{opacity:1;transform:none;transition:.5s cubic-bezier(.2,.7,.2,1)}
+  .slide.active .stop:nth-child(2){transition-delay:.18s}
+  .slide.active .stop:nth-child(3){transition-delay:.34s}
+  .slide.active .stop:nth-child(4){transition-delay:.5s}
+  .stop::before{content:"";position:absolute;top:0;left:0;width:1cqh;height:1cqh;border-radius:50%;background:var(--accent)}
+  .stop h3{font-size:1.28cqw;margin-bottom:.5cqh}
+  .stop p{color:var(--muted);font-size:.92cqw;line-height:1.45}
+  .stop .cap{display:block;font-size:.7cqw;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:.8cqh}
+
+  .chiprow{display:flex;flex-wrap:wrap;gap:.9cqw;margin-top:2.4cqh}
+  .chiprow span{font-size:.88cqw;color:var(--muted);border:1px solid var(--line);
+    border-radius:100cqw;padding:.75cqh 1.2cqw;transition:border-color .25s,color .25s}
+  .chiprow span:hover{border-color:var(--line-strong);color:var(--text)}
+  .chiprow.acc span{border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--text)}
+
+  /* ── screens ────────────────────────────────────── */
+  .s-screen{flex-direction:row;align-items:center;gap:4cqw}
+  .s-screen .copy{flex:0 0 27cqw}
+  .s-screen .copy h2{font-size:2.4cqw}
+  .s-screen .visual{flex:1;min-width:0;display:flex;justify-content:center}
+  .shot{margin:0;max-width:100%;position:relative;overflow:hidden;border-radius:.9cqw}
+  .shot img{
+    display:block;max-width:100%;max-height:68cqh;
+    border-radius:.9cqw;border:1px solid var(--line-strong);
+    cursor:zoom-in;background:#fff;
+    transition:transform .5s cubic-bezier(.2,.7,.2,1);
+  }
+  .shot:hover img{transform:scale(1.02)}
+  .shot .enl{
+    position:absolute;right:1.1cqw;bottom:1.5cqh;display:flex;align-items:center;gap:.5cqw;
+    background:rgba(0,0,0,.62);color:#fff;font-size:.8cqw;letter-spacing:.08em;
+    padding:.65cqh .95cqw;border-radius:100cqw;opacity:0;transition:opacity .3s;pointer-events:none;
+  }
+  .shot:hover .enl{opacity:1}
+
+  /* image grid */
+  .quad{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6cqw;margin-top:3cqh}
+  .quad .qitem{margin:0;opacity:0;transform:translateY(2.2cqh)}
+  .slide.active .quad .qitem{opacity:1;transform:none;transition:.55s cubic-bezier(.2,.7,.2,1)}
+  .slide.active .quad .qitem:nth-child(1){transition-delay:.15s}
+  .slide.active .quad .qitem:nth-child(2){transition-delay:.3s}
+  .slide.active .quad .qitem:nth-child(3){transition-delay:.45s}
+  .quad .shot img{height:31cqh;max-height:none;width:100%;object-fit:cover;object-position:top}
+  .quad .dz{height:31cqh;min-height:0;padding:2cqh 1.6cqw}
+  .quad.nat{align-items:start}
+  .quad.nat .shot img{max-height:none;height:auto;width:100%;object-fit:fill}
+  .quad figcaption{margin-top:1.3cqh}
+  .quad figcaption b{display:block;font-family:var(--head);font-weight:600;font-size:1.02cqw;
+    color:var(--text);margin-bottom:.35cqh}
+  .quad figcaption b em{font-style:normal;color:var(--accent)}
+  .quad figcaption span{font-size:.86cqw;color:var(--muted);line-height:1.45;display:block}
+
+  /* screenshot placeholder */
+  .dz{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1cqh;
+    border:1px dashed var(--line-strong);border-radius:.9cqw;background:color-mix(in srgb,var(--accent) 5%,transparent);
+    padding:6cqh 2.4cqw;text-align:center;min-height:30cqh}
+  .dz b{font-size:1cqw;color:var(--muted);font-weight:600}
+  .dz span{font-family:var(--mono);font-size:.8cqw;color:var(--accent)}
+  .dz em{font-style:normal;font-size:.78cqw;color:var(--faint);max-width:34ch;line-height:1.5}
+
+  /* ── tables ─────────────────────────────────────── */
+  .tbl{width:100%;border-collapse:collapse;margin-top:2.6cqh}
+  .tbl th{text-align:left;font-size:.7cqw;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--faint);padding:0 1.4cqw 1.3cqh 0;border-bottom:1px solid var(--line-strong)}
+  .tbl td{padding:1.5cqh 1.4cqw 1.5cqh 0;border-bottom:1px solid var(--line);
+    font-size:.92cqw;line-height:1.5;color:var(--muted);vertical-align:top}
+  .tbl tr:last-child td{border-bottom:0}
+  .tbl td.n{color:var(--text);font-weight:600}
+  .tbl td.k{font-family:var(--mono);font-size:.85cqw;color:var(--accent);white-space:nowrap}
+  .tbl td em{font-style:italic}
+
+  /* token list */
+  .tokens{margin-top:2.6cqh}
+  .tok{display:flex;align-items:center;gap:1.1cqw;padding:1.25cqh 0;border-top:1px solid var(--line)}
+  .tok i{width:1.15cqw;height:1.15cqw;border-radius:.25cqw;flex:none;border:1px solid rgba(127,127,127,.35);font-style:normal}
+  .tok b{font-family:var(--mono);font-weight:400;font-size:.9cqw;color:var(--text)}
+  .tok u{text-decoration:none;color:var(--faint);font-size:.9cqw;margin-left:auto;text-align:right}
+
+  /* prompt panel */
+  .codep{background:var(--panel-dark);border:1px solid var(--line);border-radius:.8cqw;
+    padding:3cqh 2cqw;font-family:var(--mono);font-size:.82cqw;line-height:1.85;
+    color:var(--muted);white-space:pre-wrap}
+  .codep b{color:var(--accent);font-weight:600}
+  .codep u{color:var(--text);text-decoration:none}
+
+  /* metric */
+  .metric{border-top:1px solid var(--line-strong);padding-top:2.2cqh;margin-top:3cqh}
+  .metric .k{font-size:.78cqw;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  .metric .big{font-family:var(--head);font-weight:700;font-variant-numeric:tabular-nums;
+    font-size:3.4cqw;letter-spacing:-.03em;line-height:1;margin:1.4cqh 0 .9cqh;color:var(--accent)}
+  .metric p{color:var(--muted);font-size:.92cqw;line-height:1.5}
+
+  /* guardrail grid */
+  .gr{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4cqw 3cqw;margin-top:3.4cqh}
+  .gr .g{border-top:1px solid var(--line);padding-top:1.8cqh;opacity:0;transform:translateY(1.8cqh)}
+  .slide.active .gr .g{opacity:1;transform:none;transition:.5s cubic-bezier(.2,.7,.2,1)}
+  .slide.active .gr .g:nth-child(1){transition-delay:.12s}
+  .slide.active .gr .g:nth-child(2){transition-delay:.24s}
+  .slide.active .gr .g:nth-child(3){transition-delay:.36s}
+  .slide.active .gr .g:nth-child(4){transition-delay:.48s}
+  .slide.active .gr .g:nth-child(5){transition-delay:.6s}
+  .slide.active .gr .g:nth-child(6){transition-delay:.72s}
+  .gr .g i{font-style:normal;font-family:var(--head);font-weight:700;font-size:.92cqw;
+    letter-spacing:.14em;color:var(--accent);display:block;margin-bottom:.9cqh}
+  .gr .g b{display:block;font-family:var(--head);font-weight:600;font-size:1.25cqw;
+    letter-spacing:-.015em;margin-bottom:.7cqh}
+  .gr .g p{color:var(--muted);font-size:.9cqw;line-height:1.5}
+  .gr .g.accent b{color:var(--accent)}
+
+  /* ── title / cover / thanks ─────────────────────── */
+  .s-title{justify-content:center}
+  .s-title h1{font-size:6.4cqw;line-height:1;letter-spacing:-.032em}
+  .s-title .rule{height:1px;background:var(--line-strong);margin:4.6cqh 0 4cqh;transform:scaleX(0);transform-origin:left}
+  .s-title.active .rule{transform:scaleX(1);transition:transform .9s cubic-bezier(.66,0,.34,1) .4s}
+  .s-title .tag{font-size:1.9cqw;color:var(--muted);max-width:64cqw;line-height:1.45}
+  .s-title .tag em{font-style:normal;color:var(--text)}
+
+  .s-cover{justify-content:center}
+  .s-cover h1{font-size:5cqw}
+  .s-cover .pillrow{display:flex;align-items:center;gap:1.3cqw;margin-top:3cqh;flex-wrap:wrap}
+  .s-cover .pill{background:var(--accent);color:var(--on-accent);border-radius:100cqw;
+    font-family:var(--head);font-weight:600;font-size:1.05cqw;padding:1.3cqh 2cqw}
+  .s-cover .pill.ghost{background:none;color:var(--muted);border:1px solid var(--line-strong)}
+  .s-cover .sub{margin-top:3cqh;color:var(--muted);font-size:1.1cqw;max-width:56ch;line-height:1.55}
+
+  .s-thanks{align-items:center;text-align:center;justify-content:center}
+  .s-thanks h1{font-size:5.4cqw}
+  .contact{margin-top:4.2cqh;width:46cqw}
+  .contact a{display:flex;justify-content:space-between;align-items:baseline;gap:2cqw;
+    padding:1.7cqh 0;border-bottom:1px solid var(--line);
+    color:var(--text);text-decoration:none;font-size:1.1cqw;transition:color .25s,padding-left .25s}
+  .contact a span{font-size:.8cqw;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+  .contact a:hover{color:var(--accent);padding-left:.8cqw}
+
+  /* slide meta line, bottom-left of every content slide */
+  .meta{position:absolute;left:8cqw;bottom:5cqh;font-size:.72cqw;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--faint);font-weight:600}
+
+  /* ── lightbox ───────────────────────────────────── */
+  .lightbox{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.94);
+    display:none;align-items:center;justify-content:center;padding:3vh 3vw;cursor:zoom-out}
+  .lightbox.open{display:flex}
+  .lightbox img{max-width:100%;max-height:100%;border-radius:8px}
+
+  /* ── speaker notes ──────────────────────────────── */
+  .notes{display:none}
+  #notes{position:fixed;left:0;right:0;bottom:0;max-height:42vh;overflow:auto;z-index:80;
+    background:#0b0d11;border-top:2px solid var(--accent);padding:20px 28px;display:none}
+  html.light #notes{background:#fff;border-top-color:var(--accent)}
+  #notes.on{display:block}
+  #notes h4{font-family:var(--head);font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:10px}
+  #notes p{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:9px;max-width:120ch}
+  #notes strong{color:var(--text);font-weight:600}
+  #notes em{color:var(--text);font-style:italic}
+  #notes ul{margin:0 0 8px 18px}
+  #notes li{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:5px}
+  #help{position:fixed;right:14px;top:12px;z-index:70;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--faint);transition:opacity .6s ease}
+  #help.hide{opacity:0}
+
+  @media(prefers-reduced-motion:reduce){
+    .track{transition:none}
+    .a,.stop,.quad .qitem,.gr .g{opacity:1;transform:none;transition:none}
+  }
+
+  /* ── print / PDF ────────────────────────────────── */
+  @page{size:1600px 900px;margin:0}
+  @media print{
+    body{display:block;overflow:visible}
+    .shell{width:1600px;gap:0}
+    .stage{container-type:normal;aspect-ratio:auto;height:auto;border:0;overflow:visible}
+    .track{display:block;transform:none !important}
+    .slide{container-type:size;width:1600px;height:900px;break-after:page;display:flex !important}
+    .slide .a,.slide .stop,.slide .qitem,.slide .g{opacity:1 !important;transform:none !important}
+    .hud,#notes,#help,.lightbox{display:none !important}
+  }
+</style>
+</head>
+<body>
+
+<div id="help">← → · N notes · F full · P print</div>
+<div class="lightbox" id="lightbox" role="dialog" aria-label="Enlarged screenshot"><img src="" alt=""></div>
+
+<div class="shell">
+  <div class="stage">
+  <div class="track" id="track">
+
+    <!-- 01 · Title -->
+    <section class="slide s-title" data-name="Title" data-glow="title">
+      <h1 class="a">One Data Grid,<br>three surfaces<span class="dot">.</span></h1>
+      <div class="rule"></div>
+      <p class="tag a">An accounting data grid composed from <em>Material 3</em> primitives — audited in <em>Figma</em>, specified in <em>Storybook</em>, built with <em>Claude Code</em>.</p>
+      <div class="chiprow a"><span>Variant B · Clients &amp; Accounts</span><span>Figma</span><span>Storybook</span><span>Live app</span></div>
+      <div class="notes">
+        <p><strong>Open in 20 seconds.</strong> Three artifacts, one component. I chose variant B — Clients &amp; Accounts — because it exercises the richest interaction surface: search, per-column filters, column management, sort, selection with bulk actions, pinning, density.</p>
+        <p>I folded in variant A's row semantics — error/overdue rows, negative-value treatment, saved views — so the same component carries a financial report without a fork. That's the thread through the session: <em>one systemic component, configured, not forked.</em></p>
+      </div>
+    </section>
+
+    <!-- 02 · Reference screen -->
+    <section class="slide s-screen" data-name="Reference screen">
+      <div class="copy">
+        <span class="step a">The why</span>
+        <h2 class="a">Starting with the screen accountants use all day<i class="dot">.</i></h2>
+        <p class="lede a">A clients &amp; accounts roster — the screen an accountant lives in all day.</p>
+        <div class="sys a">
+          <span>Scan hundreds of rows for the <b>one that's wrong</b></span>
+          <span>Keep <b>identity in view</b> while reading right-hand figures</span>
+          <span>Compare figures vertically — <b>digits must align</b></span>
+          <span>Trust that <b>red means owed</b>, not decoration</span>
+        </div>
+      </div>
+      <div class="visual a">
+        <figure class="shot"><img src="assets/app-full.png" alt="Accounts screen">
+          <span class="enl"><i class="ph ph-arrows-out"></i>Enlarge</span></figure>
+      </div>
+      <div class="notes">
+        <p><strong>~45s.</strong> Ground the panel in the user before the system. Four behaviours drive every decision that follows: scan, anchor, compare, trust.</p>
+        <p>This is my build of the reference pattern — the roster you'd find in any accounting platform: client, account, balance, status, currency, last activity. I come back to it at the end as the output.</p>
+      </div>
+    </section>
+
+    <!-- 03 · M3 audit -->
+    <section class="slide" data-name="M3 audit">
+      <span class="step a">M3 audit</span>
+      <h2 class="a">Material 3 has no data grid<i class="dot">.</i></h2>
+      <p class="lede a">M2 shipped a data table spec. M3 dropped it and never replaced it — so the design work is composition plus <span class="hl">documented deviation</span>.</p>
+      <div class="cols c2 a" style="margin-top:5cqh">
+        <div class="col">
+          <div class="tick"></div>
+          <h3>Primitives I compose</h3>
+          <div class="sys tight">
+            <span><b>List item</b> — row anatomy, leading and trailing slots</span>
+            <span><b>Chip</b> — applied filters, removable</span>
+            <span><b>Menu</b> — columns, filters, saved views, row actions</span>
+            <span><b>Text field</b> — search and inline cell editor</span>
+            <span><b>Checkbox · icon button · segmented button</b></span>
+            <span><b>Surface + elevation roles</b></span>
+          </div>
+        </div>
+        <div class="col">
+          <div class="tick"></div>
+          <h3>Where I depart — and why</h3>
+          <div class="sys tight">
+            <span><b>32px compact rows</b> — below M3's list floor, twice the data on screen</span>
+            <span><b>Tabular figures, right-aligned</b> — digits align down a column</span>
+            <span><b>Zebra, sticky header, frozen column</b> — M3 has no column model at all</span>
+            <span><b>Error color carries data meaning</b> — never alone; a named badge always accompanies it</span>
+            <span><b>Composite toolbar</b> — search, views, filters, density, columns in one region</span>
+          </div>
+        </div>
+      </div>
+      <p class="footline a"><b>Every departure resolves to a named token.</b> A deviation with a token is a system decision; a deviation without one is technical debt.</p>
+      <div class="notes">
+        <p><strong>~70s.</strong> The gap is the whole exercise: if M3 shipped a grid, this would be "apply the spec."</p>
+        <p>Frame each departure as a trade — what I gave up (M3 conformance, touch comfort) for what I bought (scan speed, vertical comparison, trust in color). The contentious one is reusing the error role for data values; my defence is that accountants already read red as "owed", and I mitigated color-only meaning with named badges, verified later by axe.</p>
+      </div>
+    </section>
+
+    <!-- 04 · Token strategy -->
+    <section class="slide" data-name="Token strategy">
+      <span class="step a">Token strategy</span>
+        <h2 class="a">How a token travels from Figma into the component<i class="dot">.</i></h2>
+      <div class="spectrum">
+        <div class="stop"><span class="cap">Source</span><h3>Figma variables</h3><p>Accounting (sys) · Data Grid / Semantic (comp) · Density (3 modes)</p></div>
+        <div class="stop"><span class="cap">Bridge</span><h3>CSS custom properties</h3><p>The Figma name preserved as a comment on every token</p></div>
+        <div class="stop"><span class="cap">Surface</span><h3>Component styles</h3><p>The grid consumes only these — never a raw value</p></div>
+      </div>
+      <div class="cols c2 a" style="margin-top:2.6cqh">
+        <div class="tokens">
+          <div class="tok"><i style="background:#ebddff"></i><b>--grid-row-selected</b><u>Secondary Container</u></div>
+          <div class="tok"><i style="background:#f5f2ff"></i><b>--grid-row-zebra</b><u>Surface Container Low</u></div>
+          <div class="tok"><i style="background:#ffdad6"></i><b>--grid-row-error</b><u>Error Container</u></div>
+          <div class="tok"><i style="background:#ba1a1a"></i><b>--grid-value-negative</b><u>Schemes / Error</u></div>
+          <div class="tok"><i style="background:#35693e"></i><b>--grid-value-positive</b><u>Extended / Success</u></div>
+          <div class="tok"><i style="background:#5a5892"></i><b>--grid-border-active</b><u>Primary · focus ring</u></div>
+        </div>
+        <div class="col" style="padding-top:2.6cqh">
+          <h3>The rule I hold to</h3>
+          <p>Components consume <b style="color:var(--text)">component tokens</b>. Component tokens alias <b style="color:var(--text)">system tokens</b>. Nothing, anywhere, is a raw hex.</p>
+          <p style="margin-top:1.8cqh;color:var(--faint)">Theming becomes a one-collection change — light to dark, CWAN to a client brand.</p>
+        </div>
+      </div>
+      <div class="notes">
+        <p><strong>~60s.</strong> Land the mechanism, not the list: the Figma variable name travels into the CSS as a comment, so any reviewer can trace a pixel back to a variable in seconds. That's what made AI-generated code auditable — I could scan for raw hex and instantly see where it had gone off-system.</p>
+        <p>Four token categories mapped to M3: color (row states, value polarity, borders, badge pairs), typography (the M3 ramp verbatim, five roles), spacing (padding and heights per density), elevation (four effect styles, all directional — shadows are earned, never decorative).</p>
+      </div>
+    </section>
+
+    <!-- 05 · Density -->
+    <section class="slide" data-name="Density">
+      <span class="step a">Token strategy</span>
+      <h2 class="a">Density is handled as a mode, not as three components<i class="dot">.</i></h2>
+      <div class="quad nat">
+        <figure class="qitem shot"><img src="assets/sb-compact.png" alt="Compact density">
+          <figcaption><b><em>Compact</em> · 32px rows</b><span>50+ row worksets, registers, reconciliation</span></figcaption></figure>
+        <figure class="qitem shot"><img src="assets/sb-standard.png" alt="Standard density">
+          <figcaption><b><em>Standard</em> · 40px rows</b><span>The default for most screens</span></figcaption></figure>
+        <figure class="qitem shot"><img src="assets/sb-comfortable.png" alt="Comfortable density">
+          <figcaption><b><em>Comfortable</em> · 48px rows</b><span>Touch and review — a +2 extension of M3's scale</span></figcaption></figure>
+      </div>
+      <p class="footline a"><b>One attribute changes:</b> <code>[data-density]</code> re-points row height, header height and cell padding at a different mode of the same collection. Identical DOM, identical tokens, identical column config — so a fourth tier is a row in a collection, not a new component.</p>
+      <div class="notes">
+        <p><strong>~40s.</strong> Show it rather than argue it — "density is a mode" stays abstract until you see three identical grids differing only in rhythm.</p>
+        <p>If asked why comfortable exists when accountants want density: review and approval are read-at-a-glance tasks, often on a tablet. Same data, different task, same component.</p>
+      </div>
+    </section>
+
+    <!-- 06 · Figma cover -->
+    <section class="slide s-cover" data-name="Figma architecture" data-glow="figma">
+      <span class="step a">Live demo</span>
+      <h1 class="a">The Figma<br>architecture<span class="dot">.</span></h1>
+      <div class="pillrow a">
+        <span class="pill">Spec &amp; M3 audit</span>
+        <span class="pill ghost">Data Grid components</span>
+        <span class="pill ghost">Examples</span>
+      </div>
+      <p class="sub a">Three pages, in the order I built them. Let's open the file — layer naming, Auto Layout, component properties, and the responsive and frozen-column behaviour.</p>
+      <div class="notes">
+        <p><strong>Live demo — 3 minutes, four moves. Don't debug live; the next three slides carry the same content as stills.</strong></p>
+        <ul>
+          <li><strong>Layer naming (30s):</strong> cell → row → grid, named for what they are, no "Frame 427".</li>
+          <li><strong>Auto Layout (45s):</strong> the row is a horizontal stack, the grid a vertical stack; show min/max width on a currency column and the truncation rule on a name column.</li>
+          <li><strong>Properties (60s):</strong> select a Table Row instance → toggle <em>sortable</em>, switch a Sorting variant, swap a status badge instance.</li>
+          <li><strong>Responsive + frozen (45s):</strong> narrow the frame so low-priority columns drop, then scroll horizontally to show the identity column pinned with its edge shadow.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 07 · Components -->
+    <section class="slide s-screen" data-name="Components">
+      <div class="copy">
+        <span class="step a">Figma · Page 2</span>
+        <h2 class="a">Built so it doesn't break when someone edits it<i class="dot">.</i></h2>
+        <div class="sys a tight">
+          <span><b>Auto Layout everywhere</b> — no absolute positioning in the table</span>
+          <span><b>Min/max per column</b> — figures get a floor; text truncates, headers never do</span>
+          <span><b>Slots, not duplicates</b> — badge and action are instance swaps</span>
+          <span><b>Shallow nesting</b> — cell → row → grid, so overrides survive updates</span>
+        </div>
+        <div class="chiprow a"><span>Header Cell</span><span>Row Cell</span><span>Table Row</span><span>Toolbar</span><span>Filter Chip</span><span>Menu Item</span><span>Footer</span><span>Complete DG</span></div>
+      </div>
+      <div class="visual a">
+        <figure class="shot"><img src="assets/figma-components.png" alt="Figma components page">
+          <span class="enl"><i class="ph ph-arrows-out"></i>Enlarge</span></figure>
+      </div>
+      <div class="notes">
+        <p><strong>~45s.</strong> "Resists breaking" is an evaluation criterion — speak to it directly. Two decisions buy the most resilience: instance swaps instead of variant explosion (a new badge type doesn't multiply the row's variants), and min/max constraints instead of fixed widths (a long client name doesn't blow up the layout).</p>
+        <p>Headers-never-truncate is worth flagging — a clipped column header makes a table unreadable, and it's exactly one of the rules the AI broke later.</p>
+      </div>
+    </section>
+
+    <!-- 08 · Properties -->
+    <section class="slide" data-name="Properties">
+      <span class="step a">Figma · Page 2</span>
+      <h2 class="a">Properties named the way an engineer would name props<i class="dot">.</i></h2>
+      <div class="cols c2 a">
+        <div class="col">
+          <div class="tick"></div>
+          <h3>Component properties</h3>
+          <div class="sys tight">
+            <span><b>Boolean</b> — <code>sortable</code> <code>pinned</code> <code>editable</code> <code>selected</code> <code>hasError</code></span>
+            <span><b>Text</b> — <code>columnLabel</code> <code>cellValue</code> <code>savedView</code></span>
+            <span><b>Instance swap</b> — status badge slot · trailing action slot</span>
+            <span><b>Variant</b> — <code>density</code> · sort direction · toolbar state</span>
+          </div>
+        </div>
+        <div class="col">
+          <div class="tick"></div>
+          <h3>The variants I built</h3>
+          <table class="tbl" style="margin-top:1.6cqh">
+            <tr><td class="n" style="width:30%">Row</td><td>Default · Hover · Selected · Read-only · Error</td></tr>
+            <tr><td class="n">Header cell</td><td>Default · Sorted asc · Sorted desc · Filter active</td></tr>
+            <tr><td class="n">Cell</td><td>Default · Editing · Error</td></tr>
+            <tr><td class="n">Toolbar</td><td>Default · Search active · Filters applied</td></tr>
+          </table>
+        </div>
+      </div>
+      <p class="footline a"><b>The rule I follow:</b> if a behaviour can live as a property on the existing set, it never becomes a second component. Every variant above has a matching Storybook story or Control.</p>
+      <div class="notes">
+        <p><strong>~45s.</strong> The names are deliberately engineer-shaped: <code>hasError</code>, not "Alert style"; <code>density</code>, not "Size big/small". When property names and prop names are identical, the handoff conversation disappears.</p>
+        <p>The "one rule" line answers the panel's core question — one grid flexing by configuration, not forks. Grouped subtotal rows for a Trial Balance are a row <em>type</em>, not a second grid.</p>
+      </div>
+    </section>
+
+    <!-- 09 · Responsive -->
+    <section class="slide" data-name="Responsive">
+      <span class="step a">Figma · Page 3</span>
+      <h2 class="a">Responsive behaviour comes from rules, not redrawn frames<i class="dot">.</i></h2>
+      <div class="quad">
+        <figure class="qitem shot"><img src="assets/figma-examples.png" alt="Figma examples page">
+          <figcaption><b><em>Designed</em></b><span>Desktop, tablet and mobile frames on the Examples page</span></figcaption></figure>
+        <figure class="qitem shot"><img src="assets/sb-pinned.png" alt="Frozen columns">
+          <figcaption><b><em>Frozen columns</em></b><span>Identity pins left, actions pin right — shadows only where content hides</span></figcaption></figure>
+        <figure class="qitem shot"><img src="assets/sb-mobile.png" alt="Mobile cards">
+          <figcaption><b><em>Card fallback</em></b><span>Below 640px, with search, filters and selection intact</span></figcaption></figure>
+      </div>
+      <p class="footline a"><b>One number per column drives it:</b> <code>priority</code> decides what collapses first. Identity, balance, status and account never auto-hide — the table degrades predictably instead of arbitrarily.</p>
+      <div class="notes">
+        <p><strong>~40s.</strong> Responsive here is configuration, not three designs — the difference between a system that scales and three artboards that drift apart.</p>
+        <p>The mobile card fallback is the honest answer to "a data grid on a phone": accountants don't reconcile on a phone, they look one account up. So mobile optimises for finding one row, not scanning fifty.</p>
+      </div>
+    </section>
+
+    <!-- 10 · Storybook -->
+    <section class="slide s-screen" data-name="Storybook" data-glow="sb">
+      <div class="copy">
+        <span class="step a">Storybook</span>
+        <h2 class="a">What Storybook is doing in this workflow<i class="dot">.</i></h2>
+        <p class="lede a">Figma says what it should <b style="color:var(--text)">look like</b>. Storybook says what it must <b style="color:var(--text)">do</b> — every state, every density, keyboard and screen reader included.</p>
+        <div class="sys a tight">
+          <span><b>16 stories</b> — densities, filters, pinning, tablet, mobile, loading, empty, error</span>
+          <span><b>5 interaction tests</b> that replay on every run</span>
+          <span><b>Design Tokens</b> page read live from the running CSS</span>
+          <span><b>Accessibility</b> page with the audit record</span>
+        </div>
+      </div>
+      <div class="visual a">
+        <figure class="shot"><img src="assets/sb-ui-controls.png" alt="Storybook canvas and controls">
+          <span class="enl"><i class="ph ph-arrows-out"></i>Enlarge</span></figure>
+      </div>
+      <div class="notes">
+        <p><strong>Live demo — 90s.</strong> Open the Canvas, flip <code>density</code> compact → comfortable in the Controls panel and let row heights change on screen; that one interaction proves the token modes are wired end to end. Then open the Design Tokens page and point at the "read live from CSS" line.</p>
+        <p>Be upfront: I generated this code. What I own is the spec, the property mapping, the checklist, and the judgment about whether the output matched — which is the actual skill on trial.</p>
+      </div>
+    </section>
+
+    <!-- 11 · Prop mapping -->
+    <section class="slide" data-name="Prop mapping">
+      <span class="step a">Handoff</span>
+      <h2 class="a">How each Figma property maps to a prop and a Control<i class="dot">.</i></h2>
+      <table class="tbl a">
+        <thead><tr><th style="width:13%">Prop</th><th style="width:13%">Control</th><th style="width:36%">Figma property</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td class="k">density</td><td>inline radio</td><td>Complete DG → Density variant, from the Density collection</td><td>Rows 32 / 40 / 48 · padding 12·8 / 16·12 / 20·16</td></tr>
+          <tr><td class="k">sortable</td><td>boolean</td><td>Header Cell → Sortable + Sorting variants</td><td>Sort affordance and <code>aria-sort</code> cycling</td></tr>
+          <tr><td class="k">selectable</td><td>boolean</td><td>Table Row → Checkbox</td><td>Selection column, enables bulk actions</td></tr>
+          <tr><td class="k">filters</td><td>object</td><td>Toolbar → State = Filters, with Filter Chip instances</td><td>Removable chips; Clear all empties the set</td></tr>
+          <tr><td class="k">columns</td><td>object</td><td>Header Cell → Filter · Row Cell → Editing / Error · Pin</td><td>Per column: numeric, badge, editable, width, <b style="color:var(--text)">priority</b></td></tr>
+          <tr><td class="k">loading</td><td>boolean</td><td>— <em>state, not a Figma variant</em></td><td>Skeleton rows</td></tr>
+        </tbody>
+      </table>
+      <div class="notes">
+        <p><strong>~40s.</strong> Point at <code>columns</code> — that's where the systemic claim gets cashed. A Trial Balance and a clients roster differ by the contents of that array, not by a different component.</p>
+        <p><code>loading</code> is honestly marked code-only: Figma didn't need a skeleton variant, the component did. Handoff surfaces gaps in both directions.</p>
+      </div>
+    </section>
+
+    <!-- 12 · States -->
+    <section class="slide" data-name="States and interactions">
+      <span class="step a">States</span>
+      <h2 class="a">Walking through the states and interactions<i class="dot">.</i></h2>
+      <div class="quad">
+        <figure class="qitem shot"><img src="assets/sb-loading.png" alt="Loading state">
+          <figcaption><b><em>Loading</em></b><span>Skeletons hold the column rhythm, so nothing jumps when data lands</span></figcaption></figure>
+        <figure class="qitem shot"><img src="assets/sb-empty.png" alt="Empty state">
+          <figcaption><b><em>Empty</em></b><span>Toolbar stays — an empty result is usually a filter, not missing data</span></figcaption></figure>
+        <figure class="qitem shot"><img src="assets/sb-error.png" alt="Error state">
+          <figcaption><b><em>Error</em></b><span>Row-level treatment; the negative value still clears contrast on the error fill</span></figcaption></figure>
+      </div>
+      <div class="cols c2w a" style="margin-top:2.4cqh">
+        <div class="col">
+          <h3>Five interactions under test</h3>
+          <div class="sys tight" style="margin-top:1.6cqh">
+            <span>Search filters rows <b>and</b> announces "5 of 12 accounts"</span>
+            <span>Header click cycles <code>aria-sort</code> asc → desc</span>
+            <span>Filter menu → chip appears → count updates · column visibility removes the column</span>
+            <span>Inline edit: Enter commits, bad input flags, Escape restores</span>
+          </div>
+        </div>
+        <div class="col" style="padding-top:2.4cqh">
+          <p style="font-size:1.15cqw;color:var(--text);line-height:1.5">Writing them turns design intent into something that <span class="hl">fails loudly</span> when someone breaks it — including when the someone is an AI, three prompts later.</p>
+        </div>
+      </div>
+      <div class="notes">
+        <p><strong>~60s.</strong> Design point on the error state: the error is on the <em>row</em>, not the page. An overdue account isn't a system failure — it's data needing attention. Same token family, different semantics, which is why the badge text carries meaning and color only reinforces it.</p>
+        <p>I described these interactions in plain English and had Claude Code turn them into play functions. I can read and judge the assertions without writing them — and they're all things I care about as a designer: the announced count, the sort state, the escape hatch on an edit.</p>
+      </div>
+    </section>
+
+    <!-- 13 · Accessibility -->
+    <section class="slide s-screen" data-name="Accessibility">
+      <div class="copy">
+        <span class="step a">Accessibility</span>
+        <h2 class="a">The accessibility checklist, and what it caught<i class="dot">.</i></h2>
+        <div class="sys a tight">
+          <span>Native table semantics — status is text, never color alone</span>
+          <span><code>aria-sort</code> + a live-region result count</span>
+          <span>Full keyboard: arrows, Space selects, Enter edits, Escape cancels</span>
+          <span>Contrast: negative on an error row ≈ 5:1, badges ≥ 7:1</span>
+          <span>2px focus ring visible on every row fill</span>
+        </div>
+        <div class="metric a">
+          <div class="k">axe violations</div>
+          <div class="big num">0</div>
+          <p>across 9 story states — <b style="color:var(--text)">after</b> the audit caught two real bugs: a Filters button that lost its accessible name on mobile, and a breakpoint that had swallowed the sticky-column range.</p>
+        </div>
+      </div>
+      <div class="visual a">
+        <figure class="shot"><img src="assets/sb-ui-a11y.png" alt="Accessibility page">
+          <span class="enl"><i class="ph ph-arrows-out"></i>Enlarge</span></figure>
+      </div>
+      <div class="notes">
+        <p><strong>~45s.</strong> Report the two bugs proudly, not defensively — "zero violations" is only interesting because the audit found something first. That's evidence the check was real rather than ceremonial.</p>
+        <p>Both bugs share a failure mode, and it's a design-side one: I simplified something visually on small screens and quietly removed information the non-visual experience depended on.</p>
+      </div>
+    </section>
+
+    <!-- 14 · Prompt -->
+    <section class="slide" data-name="The prompt" data-glow="ai">
+      <span class="step a">Claude Code</span>
+      <h2 class="a">I gave it the spec before asking for any code<i class="dot">.</i></h2>
+      <div class="cols c2 a">
+        <div class="codep">Build a DataGrid for an accounting app.
+
+<b>1 · TOKENS</b> — use only these custom
+  properties. Keep the Figma variable name
+  as a comment. <u>Never a raw hex.</u>
+  [ pasted token sheet ]
+
+<b>2 · PROPS</b> — these are Figma component
+  properties; keep the names identical:
+  density | zebra | sortable | selectable |
+  pagination | filters | savedView | columns
+
+<b>3 · STATES</b> — row: default, hover, selected,
+  disabled, error · header: sorted, filtered
+  · cell: default, editing, error
+
+<b>4 · A11Y</b> — native table semantics,
+  aria-sort, live-region count, keyboard
+  navigation, visible focus.</div>
+        <div class="col">
+          <div class="tick"></div>
+          <h3>Why the prompt is shaped this way</h3>
+          <div class="sys tight">
+            <span><b>Tokens first</b> — the vocabulary is fixed before any pixel decision</span>
+            <span><b>Names non-negotiable</b> — identical names make drift visible</span>
+            <span><b>States enumerated</b> — anything I don't list, it invents</span>
+            <span><b>A11y in the same breath</b> — asked for later, it gets bolted on</span>
+          </div>
+          <p style="margin-top:3cqh;font-size:1.05cqw;color:var(--text);line-height:1.5">After that I kept to <span class="hl">one behaviour per prompt</span> — "menus dismiss on outside click", "headers never truncate". Compound asks produced churn in styling I hadn't touched.</p>
+        </div>
+      </div>
+      <div class="notes">
+        <p><strong>~60s.</strong> The single most useful instruction in the whole prompt: <em>never a raw hex</em>. It turns design review into something I can do by scanning — any literal color in the diff is a design decision I didn't authorise.</p>
+        <p>Second most useful: keeping the Figma variable name as a comment — the audit trail from pixel back to variable.</p>
+        <p>What matched intent first time: token wiring, the a11y semantics, rules-based responsive collapse, and play functions generated from prose. It is excellent at anything I specified precisely — a statement about the spec, not the tool.</p>
+      </div>
+    </section>
+
+    <!-- 15 · Drift -->
+    <section class="slide" data-name="Drift">
+      <span class="step a">Claude Code</span>
+      <h2 class="a">Where the output drifted from my design<i class="dot">.</i></h2>
+      <p class="lede a">All caught by looking, not by reading code. Each one is a commit.</p>
+      <table class="tbl a">
+        <thead><tr><th style="width:28%">What I saw</th><th style="width:32%">What went wrong</th><th>What I did</th></tr></thead>
+        <tbody>
+          <tr><td class="n">Menus cut off at the grid's edge</td><td>Rendered inside the scroll container</td><td>Re-prompted for one thing: portal the flyouts to <code>body</code></td></tr>
+          <tr><td class="n">Menus stayed open after choosing a value</td><td>Dismissal was never in my spec, so it invented none</td><td>Added the rule explicitly</td></tr>
+          <tr><td class="n">Headers ellipsized at compact density</td><td>Cell truncation rule applied to headers too</td><td>Restated the Figma rule — scroll before clipping</td></tr>
+          <tr><td class="n">Density <em>looked</em> right, wasn't systemic</td><td>Heights written as one-off pixel values per variant</td><td>Refactored to variables keyed on <code>[data-density]</code></td></tr>
+          <tr><td class="n">Column manager could hide the client name</td><td>No concept of an identity column</td><td>Locked it — a constraint I'd never written down</td></tr>
+          <tr><td class="n">The story hung, the page froze</td><td>Array defaults recreated each render → re-render loop</td><td>Described the symptom, let it find the cause — in a real project this goes to an engineer</td></tr>
+        </tbody>
+      </table>
+      <div class="notes">
+        <p><strong>~90s — the centre of gravity for this section.</strong> The pattern across all six: <strong>the model is faithful to what you wrote and inventive about what you didn't.</strong> Every drift traces to an unstated assumption of mine.</p>
+        <p>Dwell on two rows. The density refactor — it looked correct and was structurally wrong, which only a systems-minded reviewer catches. And the render loop — the boundary of my competence, which I'll say plainly: I described the symptom and would hand the underlying fix to an engineer.</p>
+      </div>
+    </section>
+
+    <!-- 16 · Guardrails -->
+    <section class="slide" data-name="Guardrails">
+      <span class="step a">Claude Code</span>
+      <h2 class="a">The guardrails that keep the output on the design<i class="dot">.</i></h2>
+      <div class="gr">
+        <div class="g"><i>01</i><b>Tokens are the only vocabulary</b><p>Any raw hex in the diff is a design decision made without me. Grepping for <code>#</code> is a five-second design audit.</p></div>
+        <div class="g"><i>02</i><b>Docs that read the running code</b><p>The token page computes its values live, so documentation can't drift from what shipped.</p></div>
+        <div class="g"><i>03</i><b>Interaction tests as contract</b><p>A refactor that breaks search or sort fails loudly instead of silently.</p></div>
+        <div class="g"><i>04</i><b>axe on every story</b><p>Change a token and a contrast regression is flagged before it reaches the app.</p></div>
+        <div class="g"><i>05</i><b>Side by side with Figma</b><p>Every story against its frame at all three densities — where four of the six drifts were found.</p></div>
+        <div class="g accent"><i>—</i><b>How the work divides</b><p>It writes. The checks catch mechanics. <span style="color:var(--text);font-weight:600">I catch intent</span> — no guardrail was ever going to flag "the identity column shouldn't be hideable."</p></div>
+      </div>
+      <div class="notes">
+        <p><strong>~50s.</strong> If only one thing lands from this section, make it this slide: working responsibly with AI as a designer means you don't review the code — you build the fixtures that make deviation visible, and you keep taste as your own job.</p>
+      </div>
+    </section>
+
+    <!-- 17 · Lessons -->
+    <section class="slide" data-name="Lessons and trade-offs" data-glow="thanks">
+      <span class="step a">Wrap-up</span>
+      <h2 class="a">What I learned, and what I traded away<i class="dot">.</i></h2>
+      <div class="cols c2 a">
+        <div class="col">
+          <div class="tick"></div>
+          <h3>Lessons</h3>
+          <div class="sys tight">
+            <span><b>Naming is the handoff</b> — the same word in Figma, prop and Control</span>
+            <span><b>Modes beat variants</b> — a fourth density is a row, not a refactor</span>
+            <span><b>Documentation should read the code</b> — a computed token page can't drift</span>
+            <span><b>Know where your competence ends</b> — I spot a wrong shadow, not a render loop</span>
+          </div>
+        </div>
+        <div class="col">
+          <div class="tick"></div>
+          <h3>Trade-offs I chose</h3>
+          <div class="sys tight">
+            <span>Row-level keyboard nav over full cell-by-cell roving tabindex</span>
+            <span>Native <code>&lt;table&gt;</code> semantics over <code>role="grid"</code></span>
+            <span>Variant B's chassis carrying variant A's row semantics</span>
+            <span>Prototype-grade code — the brief traded engineering for process</span>
+          </div>
+        </div>
+      </div>
+      <p class="pull a">"It never contradicted my spec — <span class="hl">it filled my silences</span>, plausibly and wrongly."</p>
+      <p class="footline a"><b>Knowingly out of scope:</b> dark mode · virtualization · a real export pipeline · grouped rows · Code Connect — in that order if this continued.</p>
+      <div class="notes">
+        <p><strong>~50s.</strong> Pick two lessons and say them well rather than reading four — "the AI mirrors spec quality" and "know where your competence ends" show judgment rather than technique.</p>
+        <p>Say "knowingly" out loud on scope. The difference between a gap and a trade-off is whether you can name what you bought with it. Virtualization is the likely probe: an implementation concern that doesn't change the component's API, which is exactly why it was safe to defer.</p>
+      </div>
+    </section>
+
+    <!-- 18 · Scale -->
+    <section class="slide" data-name="One template">
+      <span class="step a">Wrap-up</span>
+      <h2 class="a">How the same template extends across accounting surfaces<i class="dot">.</i></h2>
+      <table class="tbl a">
+        <thead><tr><th style="width:20%">Surface</th><th style="width:40%">Configuration</th><th>What it adds</th></tr></thead>
+        <tbody>
+          <tr><td class="n">Clients &amp; accounts</td><td>selectable · filters · badges · pinned identity</td><td>Built — the reference implementation</td></tr>
+          <tr><td class="n">Trial balance</td><td>compact · numeric columns · grouped rows</td><td>A subtotal <em>row type</em> — not a second grid</td></tr>
+          <tr><td class="n">P&amp;L / reports</td><td>period columns · date-range filters · saved views</td><td>Column groups; drill-down opens a detail surface</td></tr>
+          <tr><td class="n">Transaction register</td><td>compact · editable cells · error rows</td><td>Existing editing and error states, turned on</td></tr>
+          <tr><td class="n">AR aging / invoices</td><td>status badges · bulk actions · overdue rows</td><td>Bulk action bar — already in the selection pattern</td></tr>
+          <tr><td class="n">Reconciliation</td><td>two grids, shared selection</td><td>Composition of two instances — still one component</td></tr>
+        </tbody>
+      </table>
+      <p class="footline a"><b>A new report becomes a configuration and a data shape</b> — reviewed in an afternoon, with every accessibility guarantee, density mode and token decision inherited for free.</p>
+      <div class="notes">
+        <p><strong>~60s.</strong> This answers the evaluation criterion head-on: can one Data Grid flex, by configuration, to power both a financial report and a clients table? Walk the Trial Balance row — grouped rows with subtotals is the hardest case, and the answer is a row type plus an expand slot, both of which the instance-swap architecture already supports.</p>
+      </div>
+    </section>
+
+    <!-- 19 · Thanks -->
+    <section class="slide s-thanks" data-name="Thank you" data-glow="thanks">
+      <h1 class="a">Thank you<span class="dot">.</span></h1>
+      <div class="contact a">
+        <a href="https://www.figma.com/design/T5uwZNX9IQoA5UGd80gnWN/CWAN-Exercise---Figma" target="_blank" rel="noreferrer">CWAN-Exercise <span>Figma</span></a>
+        <a href="https://gulshanramesh.github.io/cwan-storybook/" target="_blank" rel="noreferrer">cwan-storybook <span>Storybook</span></a>
+        <a href="https://gulshanramesh.github.io/accounting-app/" target="_blank" rel="noreferrer">accounting-app <span>Live app</span></a>
+      </div>
+      <div class="notes">
+        <p><strong>Likely questions:</strong></p>
+        <ul>
+          <li><em>50k rows?</em> Virtualization — changes rendering, not the component API.</li>
+          <li><em>Engineering already has a grid library?</em> Better outcome. The tokens and the property map are the deliverable; they bind to AG Grid or MUI the same way.</li>
+          <li><em>How much of the code do you understand?</em> Structure, props, token usage, tests. Not render internals — and I'd hand those to an engineer rather than guess.</li>
+          <li><em>Why M3 at all, given the gaps?</em> It gives a complete color, type and state system for everything around the grid; I only had to design the part it doesn't cover, and I documented exactly which part that is.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 20 · Appendix -->
+    <section class="slide s-cover" data-name="Appendix" data-glow="title">
+      <span class="step a">Appendix</span>
+      <h1 class="a">Appendix<span class="dot">.</span></h1>
+      <div class="pillrow a">
+        <span class="pill ghost">Figma — audit, components, examples</span>
+        <span class="pill ghost">Storybook — 16 stories, tokens, a11y</span>
+        <span class="pill ghost">The commit trail</span>
+      </div>
+      <p class="sub a">Anything below is on demand — happy to open the file, the stories, or the diff and go as deep as you'd like.</p>
+      <div class="notes">
+        <p><strong>Park here during Q&amp;A.</strong> This slide exists so you have somewhere neutral to sit while answering, instead of leaving the thank-you slide up or scrubbing backwards.</p>
+        <p>What you can pull up quickly: the Figma variable collections and the alias chain · the Design Tokens page reading live values · any of the five interaction tests replaying · the a11y audit record · the commit history behind the six drift examples.</p>
+      </div>
+    </section>
+
+  </div>
+  </div>
+
+  <!-- HUD -->
+  <div class="hud">
+    <span class="count num"><b id="cur">01</b> / <span id="total">20</span></span>
+    <div class="thumbs" id="thumbs"></div>
+    <div class="nav">
+      <button id="notesToggle" aria-label="Toggle speaker notes"><i class="ph ph-note"></i></button>
+      <button id="themeToggle" aria-label="Toggle color mode"><i class="ic-sun ph ph-sun"></i><i class="ic-moon ph ph-moon"></i></button>
+      <button id="prev" aria-label="Previous slide"><i class="ph-bold ph-caret-left"></i></button>
+      <button id="next" aria-label="Next slide"><i class="ph-bold ph-caret-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<div id="notes"><h4>Speaker notes</h4><div id="notesBody"></div></div>
+
+<script>
+  const track  = document.getElementById('track');
+  const slides = [...track.children];
+  const cur    = document.getElementById('cur');
+  const thumbEls = [];
+  document.getElementById('total').textContent = String(slides.length).padStart(2,'0');
+  let i = 0, notesOn = false;
+
+  // hash routing: refresh or share a link and land on the same slide
+  const slugify = x => x.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  const slugs = slides.map((s,k)=>slugify(s.dataset.name||`slide-${k+1}`));
+  const slideFromHash = () => {
+    const k = slugs.indexOf(decodeURIComponent(location.hash.replace(/^#\/?/,'')));
+    return k >= 0 ? k : 0;
+  };
+
+  // missing Figma exports degrade into a labelled drop zone
+  function dropzone(img){
+    if(!img.isConnected) return;
+    const path = img.getAttribute('src'), dz = document.createElement('div');
+    dz.className = 'dz';
+    dz.innerHTML = '<b>Screenshot slot</b><span>'+path+'</span>'+
+      '<em>Export the Figma page as PNG to that path — it appears here automatically.</em>';
+    const fig = img.closest('.shot');
+    img.replaceWith(dz);
+    const enl = fig && fig.querySelector('.enl');
+    if(enl) enl.remove();
+  }
+  document.querySelectorAll('.shot img').forEach(img=>{
+    img.addEventListener('error',()=>dropzone(img));
+    // the error may already have fired before this script ran
+    if(img.complete && img.naturalWidth === 0) dropzone(img);
+  });
+
+  // chapters: Why 1–5 · Figma 6–9 · Storybook 10–13 · Claude Code 14–16 · Wrap 17–19 · Appendix 20
+  // one hue per chapter — resolves through --c0..--c4 so both themes work
+  const ACCENTS = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)','var(--c4)'];
+  function chapterOf(k){
+    if(k <= 4)  return 0;
+    if(k <= 8)  return 1;
+    if(k <= 12) return 2;
+    if(k <= 15) return 3;
+    if(k <= 18) return 4;
+    return 0;   // appendix — its own group, back to the opening hue
+  }
+  slides.forEach((s,k)=>s.style.setProperty('--accent', ACCENTS[chapterOf(k)]));
+
+  function go(n){
+    i = Math.max(0, Math.min(slides.length-1, n));
+    track.style.transform = `translateX(-${i*100}%)`;
+    history.replaceState(null, '', '#' + slugs[i]);
+    cur.textContent = String(i+1).padStart(2,'0');
+    slides.forEach((s,j)=>s.classList.toggle('active', j===i));
+    thumbEls.forEach((t,j)=>t.classList.toggle('cur', j===i));
+    const g = slides[i].dataset.glow;
+    if(g) document.body.dataset.glow = g;
+    document.body.classList.toggle('glowing', !!g);
+    const n0 = slides[i].querySelector('.notes');
+    document.getElementById('notesBody').innerHTML = n0 ? n0.innerHTML : '<p>—</p>';
+  }
+
+  document.getElementById('next').addEventListener('click',()=>go(i+1));
+  document.getElementById('prev').addEventListener('click',()=>go(i-1));
+
+  const notesEl = document.getElementById('notes');
+  function toggleNotes(){ notesOn = !notesOn; notesEl.classList.toggle('on', notesOn); }
+  document.getElementById('notesToggle').addEventListener('click', toggleNotes);
+
+  addEventListener('keydown',e=>{
+    const lb = document.getElementById('lightbox');
+    if(lb.classList.contains('open')){ if(e.key==='Escape') lb.classList.remove('open'); return; }
+    if(['ArrowRight','ArrowDown','PageDown',' ','j','J'].includes(e.key)){e.preventDefault();go(i+1);}
+    if(['ArrowLeft','ArrowUp','PageUp','k','K'].includes(e.key)){e.preventDefault();go(i-1);}
+    if(e.key==='Home'){e.preventDefault();go(0);}
+    if(e.key==='End'){e.preventDefault();go(slides.length-1);}
+    if(e.key==='n'||e.key==='N'||e.key==='s'||e.key==='S'){toggleNotes();}
+    if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
+    if(e.key==='p'||e.key==='P'){window.print();}
+  });
+
+  let sx=null;
+  addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
+  addEventListener('touchend',e=>{
+    if(sx===null) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    if(Math.abs(dx)>50) go(i + (dx<0?1:-1));
+    sx=null;
+  },{passive:true});
+
+  const lightbox = document.getElementById('lightbox');
+  const lbImg = lightbox.querySelector('img');
+  document.querySelectorAll('.shot img').forEach(img=>{
+    img.addEventListener('click',()=>{ lbImg.src = img.src; lbImg.alt = img.alt; lightbox.classList.add('open'); });
+  });
+  lightbox.addEventListener('click',()=>lightbox.classList.remove('open'));
+
+  // thumbnail navigator: clone each slide into a tiny 16:9 container —
+  // cq-based sizing makes the clone render as a true miniature
+  const thumbsEl = document.getElementById('thumbs');
+  slides.forEach((s,k)=>{
+    const b = document.createElement('button');
+    b.className = 'thumb';
+    if(k > 0 && chapterOf(k) !== chapterOf(k-1)) b.classList.add('chgap');
+    b.setAttribute('aria-label', `Go to slide ${k+1} · ${s.dataset.name||''}`);
+    const c = s.cloneNode(true);
+    c.classList.remove('active');
+    c.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+    b.style.setProperty('--accent', s.style.getPropertyValue('--accent'));
+    const wrap = document.createElement('div');
+    wrap.className = 'tclone';
+    wrap.appendChild(c);
+    b.appendChild(wrap);
+    b.addEventListener('click',()=>go(k));
+    thumbsEl.appendChild(b);
+    thumbEls.push(b);
+  });
+  function sizeThumbs(){
+    thumbEls.forEach(t=>{
+      const w = t.clientWidth, cl = t.querySelector('.tclone');
+      if(cl && w) cl.style.transform = `scale(${w/1600})`;
+    });
+  }
+  addEventListener('resize', sizeThumbs);
+  addEventListener('load', sizeThumbs);
+  sizeThumbs();
+
+  // color mode: always opens in dark; the toggle applies for this session only
+  const themeBtn = document.getElementById('themeToggle');
+  themeBtn.addEventListener('click',()=>document.documentElement.classList.toggle('light'));
+
+  addEventListener('hashchange',()=>{ const k = slideFromHash(); if(k !== i) go(k); });
+  go(slideFromHash());
+  setTimeout(()=>document.getElementById('help').classList.add('hide'), 5000);
+</script>
+</body>
+</html>
